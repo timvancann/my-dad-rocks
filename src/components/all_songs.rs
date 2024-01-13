@@ -21,56 +21,9 @@ pub async fn set_song_played(song_id: i32) -> Result<(), ServerFnError> {
     }
 }
 
-#[cfg(feature = "ssr")]
-async fn find_unpracticed_unselected_random_song(
-    already_selected: Vec<Song>,
-) -> Result<Song, ServerFnError> {
-    while let Ok(song) = get_random_song().await {
-        if !song.practice_next && !already_selected.contains(&song) {
-            return Ok(song);
-        }
-    }
-    return Err(ServerFnError::ServerError(
-        "Can't find unpracticed songs".to_string(),
-    ));
-}
-
-#[cfg(feature = "ssr")]
-async fn reset_song_practice() -> Result<(), ServerFnError> {
-    let songs = Song::get_all().await?;
-    for song in songs {
-        song.set_to_practice_next(false).await?;
-    }
-    Ok(())
-}
-
-#[server(SelectRandomSongs)]
-pub async fn select_next_songs_to_practice(n: i32) -> Result<(), ServerFnError> {
-    reset_song_practice().await?;
-    let mut selected: Vec<Song> = Vec::default();
-    for _ in 0..n {
-        let song = find_unpracticed_unselected_random_song(selected.clone()).await?;
-        song.set_to_practice_next(true).await?;
-        selected.push(song);
-    }
-    Ok(())
-}
-
 #[component]
 pub fn AllSongs(set_song_id: WriteSignal<Option<i32>>) -> impl IntoView {
     let all_songs = create_resource(|| (), |_| async move { get_songs().await });
-
-    let practice_action = create_action(
-        |input: &(i32, Resource<(), Result<Vec<Song>, ServerFnError>>)| {
-            let input = input.to_owned();
-            async move {
-                select_next_songs_to_practice(input.0).await.map(|res| {
-                    input.1.refetch();
-                    res
-                })
-            }
-        },
-    );
 
     provide_context(set_song_id);
     provide_context(all_songs);
@@ -110,16 +63,6 @@ pub fn AllSongs(set_song_id: WriteSignal<Option<i32>>) -> impl IntoView {
 
     view! {
       <h2 class="text-center display-7 text-dark">Alle nummers</h2>
-      <button
-        class="btn btn-success"
-        on:click=move |_| {
-            practice_action.dispatch((4, all_songs));
-        }
-      >
-
-        <i class="bi bi-arrow-clockwise"></i>
-        Oefenen
-      </button>
       <Suspense fallback=move || {
           view! { <div>"Loading.."</div> }
       }>{songs_view}</Suspense>
@@ -147,7 +90,7 @@ pub fn SongView(song: Song) -> impl IntoView {
         use_context::<WriteSignal<Option<i32>>>().expect("to have found the setter provided");
 
     view! {
-      <tr class:table-primary=move || { song.practice_next }>
+      <tr>
         <td>
           <button
             class="btn btn-info"

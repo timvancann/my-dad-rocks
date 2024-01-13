@@ -1,0 +1,1 @@
+ALTER TABLE songs DROP COLUMN practice_next;
