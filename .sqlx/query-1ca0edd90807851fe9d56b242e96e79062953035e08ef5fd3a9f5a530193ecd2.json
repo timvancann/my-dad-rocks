@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE songs SET last_played_at = CURRENT_DATE WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1ca0edd90807851fe9d56b242e96e79062953035e08ef5fd3a9f5a530193ecd2"
+}

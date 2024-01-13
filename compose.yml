@@ -1,0 +1,28 @@
+services:
+  web:
+    image: timvancann/my-dad-rocks:latest
+    platform: linux/amd64
+    environment: 
+      DATABASE_URL: "postgres://postgres:tits@db/mydadrocks"
+    build: 
+      context: .
+      network: host
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+  db: 
+    image: postgres:16.1
+    user: root
+    environment:
+      POSTGRES_PASSWORD: tits
+      POSTGRES_DB: mydadrocks
+    ports:
+      - 5432:5432
+    volumes:
+      - mdr_data:/var/lib/postgresql
+
+volumes:
+  mdr_data:
+

@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, artist, title, last_played_at, audio_file_path, practice_next FROM songs as s WHERE s.id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "artist",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "last_played_at",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 4,
+        "name": "audio_file_path",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "practice_next",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "bf6d6044723a6eaca89f9eeca230af561809c23e996920943fb63224fa672a62"
+}
