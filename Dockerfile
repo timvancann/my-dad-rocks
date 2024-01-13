@@ -32,7 +32,7 @@ FROM rustlang/rust:nightly-bullseye as runner
 
 # -- NB: update binary name from "leptos_start" to match your app name in Cargo.toml --
 # Copy the server binary to the /app directory
-COPY --from=builder /app/target/release/my-dad-rocks-ssr /app/
+COPY --from=builder /app/target/release/my-dad-rocks /app/
 
 # /target/site contains our JS/WASM/CSS, etc.
 COPY --from=builder /app/target/site /app/site
@@ -50,5 +50,5 @@ EXPOSE 8080
 
 # -- NB: update binary name from "leptos_start" to match your app name in Cargo.toml --
 # Run the server
-CMD ["/app/my-dad-rocks-ssr"]
+CMD ["/app/my-dad-rocks"]
 
