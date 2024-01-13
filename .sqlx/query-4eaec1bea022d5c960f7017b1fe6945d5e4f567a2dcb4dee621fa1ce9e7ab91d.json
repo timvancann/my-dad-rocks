@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, artist, title, last_played_at, audio_file_path, practice_next FROM songs as s ORDER BY (s.practice_next, s.last_played_at) DESC",
+  "query": "\n        SELECT \n          * \n        FROM songs as s \n        WHERE s.id = $1",
   "describe": {
     "columns": [
       {
@@ -10,12 +10,12 @@
       },
       {
         "ordinal": 1,
-        "name": "artist",
+        "name": "title",
         "type_info": "Varchar"
       },
       {
         "ordinal": 2,
-        "name": "title",
+        "name": "artist",
         "type_info": "Varchar"
       },
       {
@@ -30,12 +30,14 @@
       },
       {
         "ordinal": 5,
-        "name": "practice_next",
-        "type_info": "Bool"
+        "name": "created_at",
+        "type_info": "Timestamp"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Int4"
+      ]
     },
     "nullable": [
       false,
@@ -46,5 +48,5 @@
       false
     ]
   },
-  "hash": "83e2e921d68ed61711d4e4618447dd2c73b7195219b192a7a1d9333739d12398"
+  "hash": "4eaec1bea022d5c960f7017b1fe6945d5e4f567a2dcb4dee621fa1ce9e7ab91d"
 }
