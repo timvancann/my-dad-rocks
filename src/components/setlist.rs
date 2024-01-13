@@ -1,17 +1,57 @@
+use crate::components::random_selection::get_random_song;
+use crate::models::{setlist::Setlist, song::Song};
 use leptos::*;
 
-use crate::models::{setlist::Setlist, song::Song};
 #[server(GetSetlist)]
-async fn get_setlist() -> Result<Setlist, ServerFnError> {
+pub async fn get_setlist() -> Result<Setlist, ServerFnError> {
     match Setlist::get().await {
         Ok(setlist) => Ok(setlist),
         Err(e) => Err(ServerFnError::from(e)),
     }
 }
 
+#[cfg(feature = "ssr")]
+pub async fn find_unpracticed_unselected_random_song(
+    already_selected: &Vec<Song>,
+) -> Result<Song, ServerFnError> {
+    while let Ok(song) = get_random_song().await {
+        if !already_selected.contains(&song) {
+            return Ok(song);
+        }
+    }
+    return Err(ServerFnError::ServerError(
+        "Can't find unpracticed songs".to_string(),
+    ));
+}
+
+#[server(SelectRandomSongs)]
+pub async fn select_next_songs_to_practice(n: i32) -> Result<(), ServerFnError> {
+    let mut selected: Vec<Song> = Vec::default();
+    for _ in 0..n {
+        let song = find_unpracticed_unselected_random_song(&selected).await?;
+        selected.push(song);
+    }
+
+    Setlist::set_songs(selected.iter().map(|s| s.id).collect())
+        .await
+        .map_err(|e| ServerFnError::from(e))
+}
+
 #[component]
 pub fn SetlistView(set_song_id: WriteSignal<Option<i32>>) -> impl IntoView {
     let setlist_resource = create_resource(|| (), |_| async move { get_setlist().await });
+
+    let practice_action = create_action(
+        |input: &(i32, Resource<(), Result<Setlist, ServerFnError>>)| {
+            let input = input.to_owned();
+            async move {
+                select_next_songs_to_practice(input.0).await.map(|res| {
+                    input.1.refetch();
+                    res
+                })
+            }
+        },
+    );
 
     provide_context(set_song_id);
 
@@ -49,6 +89,16 @@ pub fn SetlistView(set_song_id: WriteSignal<Option<i32>>) -> impl IntoView {
 
     view! {
        <h3 class="text-center display-7 text-dark">Setlist</h3>
+        <button
+        class="btn btn-success"
+        on:click=move |_| {
+            practice_action.dispatch((4, setlist_resource))
+        }
+        >
+
+        <i class="bi bi-arrow-clockwise"></i>
+        Verander setlist
+      </button>
         <Suspense fallback=move || view! { <div></div> }>
           {songs_view()}
         </Suspense>

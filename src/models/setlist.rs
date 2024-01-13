@@ -30,8 +30,8 @@ impl Setlist {
               title, 
               artist, 
               last_played_at, 
-              audio_file_path, 
-              practice_next
+              audio_file_path,
+              created_at
             FROM (SELECT unnest(songs) song_id FROM setlists WHERE title = 'Oefenen') 
             as a LEFT JOIN songs b on b.id=a.song_id
             ORDER BY b.title ASC

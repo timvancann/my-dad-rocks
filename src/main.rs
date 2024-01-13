@@ -4,9 +4,9 @@ async fn main() {
     use axum::{routing::post, Router};
     use leptos::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
-    use my_dad_rocks_ssr::app::*;
-    use my_dad_rocks_ssr::database::init_db;
-    use my_dad_rocks_ssr::fileserv::file_and_error_handler;
+    use my_dad_rocks::app::*;
+    use my_dad_rocks::database::init_db;
+    use my_dad_rocks::fileserv::file_and_error_handler;
 
     init_db().await;
 

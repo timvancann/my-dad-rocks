@@ -2118,7 +2118,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "my-dad-rocks-ssr"
+name = "my-dad-rocks"
 version = "0.1.0"
 dependencies = [
  "axum",
