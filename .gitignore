@@ -15,3 +15,4 @@ playwright/.cache/
 .idea
 assets/mp3
 .DS_Store
+.env.prod
