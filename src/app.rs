@@ -13,40 +13,24 @@ pub fn App() -> impl IntoView {
     provide_meta_context();
 
     view! {
-      <Stylesheet id="leptos" href="/pkg/my-dad-rocks-ssr.css"/>
-      <Stylesheet
-        id="boostrap"
-        href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
-      />
-      <Stylesheet
-        id="fa"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
-      />
-      <Stylesheet
-        id="boostrap-icons"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-      />
-      <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"></script>
-
-      // sets the document title
+      <Stylesheet id="leptos" href="/pkg/my-dad-rocks.css"/>
+      <Stylesheet id="font-awesome" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
       <Title text="My Dad Rocks"/>
 
       // content for this welcome page
-      <Router fallback=|| {
-          let mut outside_errors = Errors::default();
-          outside_errors.insert_with_default_key(AppError::NotFound);
-          view! { <ErrorTemplate outside_errors/> }.into_view()
-      }>
-        <div class="container">
-          <main>
-            <Routes>
-              <Route path="" view=HomePage/>
-            </Routes>
-          </main>
+      <div class="flex flex-col items-center">
+        <Router fallback=|| {
+            let mut outside_errors = Errors::default();
+            outside_errors.insert_with_default_key(AppError::NotFound);
+            view! { <ErrorTemplate outside_errors/> }.into_view()
+        }>
+         <main>
+           <Routes>
+             <Route path="" view=HomePage/>
+           </Routes>
+         </main>
+        </Router>
         </div>
-      </Router>
     }
 }
 
@@ -57,14 +41,22 @@ fn HomePage() -> impl IntoView {
 
     view! {
       <div>
-        <h1 class="text-center display-4 text-dark">My Dad Rocks</h1>
-        <hr class="border border-secondary border-2 opacity-75"/>
+        <Intro/>
         <Player song_id/>
-        <hr class="border border-primary border-2 opacity-75"/>
+        <hr class="border border-primary opacity-75"/>
         <RandomSongView song_id set_song_id/>
         <SetlistView set_song_id/>
-        <hr class="border border-primary border-2 opacity-75"/>
+        <hr class="border border-primary opacity-75"/>
         <AllSongs set_song_id/>
       </div>
+    }
+}
+
+#[component]
+fn Intro() -> impl IntoView{
+    view! { 
+      <section class="mb-5 max-w-[50rem] text-center sm:mb-1 mt-2">
+        <h1 class="font-bold text-3xl">My Dad Rocks</h1>
+      </section>
     }
 }

@@ -2,8 +2,6 @@ use leptos::*;
 
 use crate::models::song::Song;
 
-use super::random_selection::get_random_song;
-
 #[server(GetSongs)]
 pub async fn get_songs() -> Result<Vec<Song>, ServerFnError> {
     match Song::get_all().await {
@@ -30,13 +28,15 @@ pub fn AllSongs(set_song_id: WriteSignal<Option<i32>>) -> impl IntoView {
 
     fn songs_to_view(songs: Vec<Song>) -> impl IntoView {
         view! {
-          <table class="table table-striped">
-            <thead>
+        <section class="flex flex-col items-center justify-center">
+          <table class="w-fit text-sm text-gray-500 dark:text-gray-400 shadow-md">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
               <tr>
-                <th scope="col"></th>
-                <th scope="col">Artiest</th>
-                <th scope="col">Titel</th>
-                <th scope="col">Laatst gespeeld</th>
+                <th scope="col" class="px-3 py-1"></th>
+                <th scope="col" class="px-3 py-1">Artiest</th>
+                <th scope="col" class="px-3 py-1">Titel</th>
+                <th scope="col" class="px-3 py-1">Laatst gespeeld</th>
+                <th scope="col" class="px-3 py-1"></th>
               </tr>
             </thead>
             <tbody>
@@ -50,6 +50,7 @@ pub fn AllSongs(set_song_id: WriteSignal<Option<i32>>) -> impl IntoView {
 
             </tbody>
           </table>
+        </section>
         }
     }
 
@@ -90,36 +91,36 @@ pub fn SongView(song: Song) -> impl IntoView {
         use_context::<WriteSignal<Option<i32>>>().expect("to have found the setter provided");
 
     view! {
-      <tr>
-        <td>
-          <button
-            class="btn btn-info"
+      <tr class="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700">
+        <td class="px-3 py-1">
+        <button type="button"
+            class="text-white bg-blue-500 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-md text-sm px-5 py-2.5 text-center inline-flex items-center me-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 transition-all"
             on:click=move |_| {
                 set_played.update(|id| *id = Some(song.id));
             }
           >
 
-            <i class="bi bi-play-circle-fill"></i>
+            <i class="fa fa-play"></i>
           </button>
         </td>
-        <td>{song.artist}</td>
-        <th>{song.title}</th>
-        <td>
+        <td class="px-3 py-1">{song.artist}</td>
+        <th class="px-3 py-1 font-medium text-gray-900 whitespace-nowrap dark:text-white">{song.title}</th>
+        <td class="px-3 py-1">
           {match song.last_played_at {
               Some(d) => view! { <div>{d.format("%d-%m-%Y").to_string()}</div> },
               None => view! { <div>"Nooit"</div> },
           }}
 
         </td>
-        <td>
-          <button
-            class="btn btn-success"
+        <td class="px-3 py-1">
+        <button type="button"
+            class="text-white bg-yellow-600 hover:bg-yellow-900 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-md text-sm px-5 py-2.5 text-center inline-flex items-center me-2 dark:bg-yellow-600 dark:hover:bg-yellow-700 dark:focus:ring-yellow-800 transition-all"
             on:click=move |_| {
                 set_played_action.dispatch((song.id, song_getter));
             }
           >
 
-            <i class="bi bi-check-circle"></i>
+            <i class="fa-solid fa-check"></i>
           </button>
         </td>
       </tr>
