@@ -28,17 +28,8 @@ pub fn AllSongs(set_song_id: WriteSignal<Option<i32>>) -> impl IntoView {
 
     fn songs_to_view(songs: Vec<Song>) -> impl IntoView {
         view! {
-        <section class="flex flex-col items-center justify-center">
-          <table class="w-fit text-sm text-gray-500 dark:text-gray-400 shadow-md">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-              <tr>
-                <th scope="col" class="px-3 py-1"></th>
-                <th scope="col" class="px-3 py-1">Artiest</th>
-                <th scope="col" class="px-3 py-1">Titel</th>
-                <th scope="col" class="px-3 py-1">Laatst gespeeld</th>
-                <th scope="col" class="px-3 py-1"></th>
-              </tr>
-            </thead>
+          <table class="table">
+            <thead></thead>
             <tbody>
               <For
                 each=move || songs.clone().into_iter().enumerate()
@@ -50,7 +41,6 @@ pub fn AllSongs(set_song_id: WriteSignal<Option<i32>>) -> impl IntoView {
 
             </tbody>
           </table>
-        </section>
         }
     }
 
@@ -63,7 +53,9 @@ pub fn AllSongs(set_song_id: WriteSignal<Option<i32>>) -> impl IntoView {
     };
 
     view! {
-      <h2 class="text-center display-7 text-dark">Alle nummers</h2>
+      <div class="flex items-center justify-between mb-4 ml-4 mr-4">
+        <div class="font-bold text-2xl">Alle nummers</div>
+      </div>
       <Suspense fallback=move || {
           view! { <div>"Loading.."</div> }
       }>{songs_view}</Suspense>
@@ -91,10 +83,28 @@ pub fn SongView(song: Song) -> impl IntoView {
         use_context::<WriteSignal<Option<i32>>>().expect("to have found the setter provided");
 
     view! {
-      <tr class="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700">
-        <td class="px-3 py-1">
-        <button type="button"
-            class="text-white bg-blue-500 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-md text-sm px-5 py-2.5 text-center inline-flex items-center me-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 transition-all"
+      <tr>
+        <td>
+          <div class="flex items-center gap-3">
+            <div class="avatar">
+              <div class="mask mask-squircle w-12 h-12"></div>
+            </div>
+            <div>
+              <div class="font-bold">{song.title}</div>
+              <div class="text-sm opacity-70">{song.artist}</div>
+              <div class="badge badge-outline text-sm opacity-50">
+          {match song.last_played_at {
+              Some(d) => d.format("%d-%m-%Y").to_string(),
+              None => "Nooit".to_string(),
+          }}
+              </div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <button
+            type="button"
+            class="btn btn-primary btn-circle"
             on:click=move |_| {
                 set_played.update(|id| *id = Some(song.id));
             }
@@ -103,18 +113,10 @@ pub fn SongView(song: Song) -> impl IntoView {
             <i class="fa fa-play"></i>
           </button>
         </td>
-        <td class="px-3 py-1">{song.artist}</td>
-        <th class="px-3 py-1 font-medium text-gray-900 whitespace-nowrap dark:text-white">{song.title}</th>
-        <td class="px-3 py-1">
-          {match song.last_played_at {
-              Some(d) => view! { <div>{d.format("%d-%m-%Y").to_string()}</div> },
-              None => view! { <div>"Nooit"</div> },
-          }}
-
-        </td>
-        <td class="px-3 py-1">
-        <button type="button"
-            class="text-white bg-yellow-600 hover:bg-yellow-900 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-md text-sm px-5 py-2.5 text-center inline-flex items-center me-2 dark:bg-yellow-600 dark:hover:bg-yellow-700 dark:focus:ring-yellow-800 transition-all"
+        <td>
+          <button
+            type="button"
+            class="btn btn-outline btn-error"
             on:click=move |_| {
                 set_played_action.dispatch((song.id, song_getter));
             }

@@ -35,7 +35,7 @@ impl Song {
               * 
             FROM songs as s 
             ORDER BY 
-              s.last_played_at ASC NULLS FIRST, s.title ASC"
+              s.title ASC"
         )
         .fetch_all(crate::database::get_db())
         .await
