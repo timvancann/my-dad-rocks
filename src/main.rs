@@ -8,7 +8,7 @@ async fn main() {
     use my_dad_rocks::database::init_db;
     use my_dad_rocks::fileserv::file_and_error_handler;
 
-    init_db().await;
+    let _ = init_db().await;
 
     simple_logger::init_with_level(log::Level::Debug).expect("couldn't initialize logging");
 

@@ -4,6 +4,7 @@ use leptos::*;
 use serde::{Deserialize, Serialize};
 use std::io::Read;
 
+use crate::components::albumart::AlbumArt;
 use crate::models::song::Song;
 
 #[cfg(feature = "ssr")]
@@ -33,8 +34,11 @@ pub async fn get_mp3(song_id: Option<i32>) -> Result<AudioFile, ServerFnError> {
 }
 
 #[component]
-pub fn Player(song_id: ReadSignal<Option<i32>>) -> impl IntoView {
-    let song = create_resource(move || song_id.get(), get_mp3);
+pub fn Player() -> impl IntoView {
+    let get_song_id =
+        use_context::<ReadSignal<Option<i32>>>().expect("get_song_id context expected");
+
+    let song = create_resource(move || get_song_id.get(), get_mp3);
 
     fn create_data_uri_from(base64_encoded_string: String) -> String {
         format!("data:audio/mpeg;base64,{}", base64_encoded_string)
@@ -53,7 +57,7 @@ pub fn Player(song_id: ReadSignal<Option<i32>>) -> impl IntoView {
                             let data_uri = create_data_uri_from(audio_file.mp3);
                             let song = audio_file.song;
                             view! {
-                              <div class="alert shadow-lg">
+                              <div class="grid grid-cols-1">
                                 <SelectedSongView song/>
                                 <AudioPlayer data_uri/>
                               </div>
@@ -73,10 +77,16 @@ pub fn Player(song_id: ReadSignal<Option<i32>>) -> impl IntoView {
 
 #[component]
 fn SelectedSongView(song: Song) -> impl IntoView {
+    let song_filepath = song.audio_file_path;
     view! {
-      <div>
-        <h3 class="font-bold">{song.title}</h3>
-        <div class="text-xs">{song.artist}</div>
+        <div class="card card-side bg-slate-100 shadow-xl">
+        <figure class="max-w-52">
+          <AlbumArt song_filepath/>
+        </figure>
+        <div class="card-body min-w-72">
+          <p class="text-xl font-medium">{song.title}</p>
+          <p>{song.artist}</p>
+        </div>
       </div>
     }
 }
@@ -84,8 +94,8 @@ fn SelectedSongView(song: Song) -> impl IntoView {
 #[component]
 fn AudioPlayer(data_uri: String) -> impl IntoView {
     view! {
-      <div class="alert shadow-lg">
-        <audio controls src=data_uri></audio>
+      <div class="flex">
+        <audio class="grow" controls src=data_uri></audio>
       </div>
     }
 }

@@ -1,13 +1,9 @@
 use crate::{
     components::all_songs::AllSongs,
-    components::{
-        footer::Footer, player::Player, random_selection::RandomSongView, setlist::SetlistView,
-    },
-    error_template::{AppError, ErrorTemplate},
+    components::{player::Player, random_selection::RandomSongView, setlist::SetlistView},
 };
 use leptos::*;
 use leptos_meta::*;
-use leptos_router::*;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -23,17 +19,9 @@ pub fn App() -> impl IntoView {
 
       // content for this welcome page
       <div class="container mx-auto">
-        <Router fallback=|| {
-            let mut outside_errors = Errors::default();
-            outside_errors.insert_with_default_key(AppError::NotFound);
-            view! { <ErrorTemplate outside_errors/> }.into_view()
-        }>
-          <main>
-            <Routes>
-              <Route path="" view=HomePage/>
-            </Routes>
-          </main>
-        </Router>
+        <main>
+          <HomePage/>
+        </main>
       </div>
     }
 }
@@ -41,19 +29,20 @@ pub fn App() -> impl IntoView {
 /// Renders the home page of your application.
 #[component]
 fn HomePage() -> impl IntoView {
-    let (song_id, set_song_id) = create_signal(None::<i32>);
+    let (get_song_id, set_song_id) = create_signal(None::<i32>);
+    provide_context(set_song_id);
+    provide_context(get_song_id);
 
     view! {
       <div>
         <Intro/>
         <div class="divider"></div>
-        <Player song_id/>
-        <RandomSongView song_id set_song_id/>
+        <Player/>
+        <RandomSongView/>
         <div class="divider"></div>
-        <SetlistView set_song_id/>
+        // <SetlistView/>
         <div class="divider"></div>
-        <AllSongs set_song_id/>
-        <Footer/>
+        <AllSongs/>
       </div>
     }
 }

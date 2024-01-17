@@ -12,21 +12,43 @@ pub async fn set_song_played(song_id: i32) -> Result<(), ServerFnError> {
 }
 
 #[component]
-pub fn SongsView(songs: Vec<Song>) -> impl IntoView {
-    view! {
-      <table class="table">
-        <thead></thead>
-        <tbody>
-          <For
-            each=move || songs.clone().into_iter().enumerate()
-            key=|(i, _)| *i
-            children=move |(_, song)| {
-                view! { <SongView song/> }
-            }
-          />
+pub fn SongListView() -> impl IntoView {
+    let song_getter = use_context::<Resource<(), Result<Vec<Song>, ServerFnError>>>()
+        .expect("Expected to find the songs getter provided");
 
-        </tbody>
-      </table>
+    view! {
+      <Suspense fallback=move || {
+          view! { <div></div> }
+      }>
+        {move || match song_getter.get() {
+            Some(result) => {
+                match result {
+                    Ok(songs) => {
+                        view! {
+                          <div>
+                            <table class="table">
+                              <thead></thead>
+                              <tbody>
+                                <For
+                                  each=move || songs.clone().into_iter().enumerate()
+                                  key=|(i, _)| *i
+                                  children=move |(_, song)| {
+                                      view! { <SongView song/> }
+                                  }
+                                />
+
+                              </tbody>
+                            </table>
+                          </div>
+                        }
+                    }
+                    Err(_) => view! { <div>"Something went wrong"</div> },
+                }
+            }
+            None => view! { <div>"No setlist"</div> },
+        }}
+
+      </Suspense>
     }
 }
 
@@ -35,9 +57,9 @@ pub fn SongView(song: Song) -> impl IntoView {
     let song_filepath = song.audio_file_path.clone();
 
     let song_getter = use_context::<Resource<(), Result<Vec<Song>, ServerFnError>>>()
-        .expect("to have the getter provided");
-    let set_played =
-        use_context::<WriteSignal<Option<i32>>>().expect("to have found the setter provided");
+        .expect("Expected to find the songs getter provided");
+    let set_song_id = use_context::<WriteSignal<Option<i32>>>()
+        .expect("Expected to have a set_played signal provided");
 
     let set_played_action = create_action(
         |input: &(i32, Resource<(), Result<Vec<Song>, ServerFnError>>)| {
@@ -78,7 +100,7 @@ pub fn SongView(song: Song) -> impl IntoView {
             type="button"
             class="btn btn-primary btn-circle"
             on:click=move |_| {
-                set_played.update(|id| *id = Some(song.id));
+                set_song_id.update(|id| *id = Some(song.id));
             }
           >
 
