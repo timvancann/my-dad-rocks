@@ -79,7 +79,7 @@ pub fn Player() -> impl IntoView {
 fn SelectedSongView(song: Song) -> impl IntoView {
     let song_filepath = song.audio_file_path;
     view! {
-        <div class="card card-side bg-slate-100 shadow-xl">
+      <div class="card card-side bg-slate-100 shadow-xl">
         <figure class="max-w-52">
           <AlbumArt song_filepath/>
         </figure>
