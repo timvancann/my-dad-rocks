@@ -1,6 +1,6 @@
 use crate::{
     components::all_songs::AllSongs,
-    components::{player::Player, random_selection::RandomSongView, setlist::SetlistView},
+    components::{player::Player, random_selection::RandomSongView},
 };
 use leptos::*;
 use leptos_meta::*;
@@ -39,8 +39,6 @@ fn HomePage() -> impl IntoView {
         <div class="divider"></div>
         <Player/>
         <RandomSongView/>
-        <div class="divider"></div>
-        // <SetlistView/>
         <div class="divider"></div>
         <AllSongs/>
       </div>

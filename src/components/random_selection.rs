@@ -31,8 +31,7 @@ pub async fn get_song(song_id: Option<i32>) -> Result<Song, ServerFnError> {
 
 #[component]
 pub fn RandomSongView() -> impl IntoView {
-    let set_song_id =
-        use_context::<WriteSignal<Option<i32>>>().expect("set_song_id context expected");
+    let set_song_id = use_context::<WriteSignal<Option<i32>>>().expect("set_song context expected");
 
     let song_action = create_action(move |_: &()| async move {
         let song = get_random_song().await;

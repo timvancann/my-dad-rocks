@@ -38,7 +38,7 @@ pub fn Player() -> impl IntoView {
     let get_song_id =
         use_context::<ReadSignal<Option<i32>>>().expect("get_song_id context expected");
 
-    let song = create_resource(move || get_song_id.get(), get_mp3);
+    let audio_file_resource = create_resource(move || get_song_id.get(), get_mp3);
 
     fn create_data_uri_from(base64_encoded_string: String) -> String {
         format!("data:audio/mpeg;base64,{}", base64_encoded_string)
@@ -50,10 +50,7 @@ pub fn Player() -> impl IntoView {
           <Suspense fallback=|| {
               view! { <div>"Loading song"</div> }
           }>
-            {move || match song.get() {
-                Some(maybe_audio_file) => {
-                    match maybe_audio_file {
-                        Ok(audio_file) => {
+            {move || if let Some(Ok(audio_file)) = audio_file_resource.get() {
                             let data_uri = create_data_uri_from(audio_file.mp3);
                             let song = audio_file.song;
                             view! {
@@ -63,11 +60,11 @@ pub fn Player() -> impl IntoView {
                               </div>
                             }
                         }
-                        _ => view! { <div>"No audio file selected"</div> },
-                    }
-                }
-                None => view! { <div>"No audio file selected"</div> },
-            }}
+        else {
+        view! { <div>"No song selected"</div> }
+
+        }
+        }
 
           </Suspense>
         </div>
@@ -77,11 +74,10 @@ pub fn Player() -> impl IntoView {
 
 #[component]
 fn SelectedSongView(song: Song) -> impl IntoView {
-    let song_filepath = song.audio_file_path;
     view! {
       <div class="card card-side bg-slate-100 shadow-xl">
         <figure class="max-w-52">
-          <AlbumArt song_filepath/>
+          <AlbumArt base64_encoded_string=song.album_art/>
         </figure>
         <div class="card-body min-w-72">
           <p class="text-xl font-medium">{song.title}</p>
