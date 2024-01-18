@@ -1,8 +1,38 @@
 use leptos::*;
 
-use crate::models::song::Song;
+use crate::{
+    components::song::SongListView,
+    models::{setlist::Setlist, song::Song},
+};
 
-use super::random_selection::get_random_song;
+#[cfg(feature = "ssr")]
+pub async fn find_unpracticed_unselected_random_song(
+    already_selected: &Vec<Song>,
+) -> Result<Song, ServerFnError> {
+    use super::random_selection::get_random_song;
+
+    while let Ok(song) = get_random_song().await {
+        if !already_selected.contains(&song) {
+            return Ok(song);
+        }
+    }
+    return Err(ServerFnError::ServerError(
+        "Can't find unpracticed songs".to_string(),
+    ));
+}
+
+#[server(SelectRandomSongs)]
+pub async fn select_next_songs_to_practice(n: i32) -> Result<(), ServerFnError> {
+    let mut selected: Vec<Song> = Vec::default();
+    for _ in 0..n {
+        let song = find_unpracticed_unselected_random_song(&selected).await?;
+        selected.push(song);
+    }
+
+    Setlist::set_songs(selected.iter().map(|s| s.id).collect())
+        .await
+        .map_err(ServerFnError::from)
+}
 
 #[server(GetSongs)]
 pub async fn get_songs() -> Result<Vec<Song>, ServerFnError> {
@@ -12,73 +42,34 @@ pub async fn get_songs() -> Result<Vec<Song>, ServerFnError> {
     }
 }
 
-#[server(SetSongPlayed)]
-pub async fn set_song_played(song_id: i32) -> Result<(), ServerFnError> {
-    logging::log!("Update song played");
-    match Song::set_played(song_id).await {
-        Ok(_) => Ok(()),
+#[server(GetSetlist)]
+pub async fn get_setlist() -> Result<Setlist, ServerFnError> {
+    match Setlist::get().await {
+        Ok(setlist) => Ok(setlist),
         Err(e) => Err(ServerFnError::from(e)),
     }
 }
 
 #[component]
-pub fn AllSongs(set_song_id: WriteSignal<Option<i32>>) -> impl IntoView {
-    let all_songs = create_resource(|| (), |_| async move { get_songs().await });
+pub fn AllSongs() -> impl IntoView {
+    let songs_resource = create_resource(|| (), |_| async move { get_songs().await });
+    let setlist = create_resource(|| (), |_| async move { get_setlist().await });
 
-    provide_context(set_song_id);
-    provide_context(all_songs);
-
-    fn songs_to_view(songs: Vec<Song>) -> impl IntoView {
-        view! {
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th scope="col"></th>
-                <th scope="col">Artiest</th>
-                <th scope="col">Titel</th>
-                <th scope="col">Laatst gespeeld</th>
-              </tr>
-            </thead>
-            <tbody>
-              <For
-                each=move || songs.clone().into_iter().enumerate()
-                key=|(i, _)| *i
-                children=move |(_, song)| {
-                    view! { <SongView song/> }
-                }
-              />
-
-            </tbody>
-          </table>
-        }
-    }
-
-    let songs_view = move || match all_songs.get() {
-        Some(result) => match result {
-            Ok(song) => view! { <div>{songs_to_view(song)}</div> },
-            Err(_) => view! { <div></div> },
-        },
-        None => view! { <div></div> },
+    let setlist_songs = move || match (songs_resource(), setlist()) {
+        (Some(Ok(songs)), Some(Ok(setlist))) => Some(
+            songs
+                .into_iter()
+                .filter(|s| setlist.songs.contains(&s.id))
+                .collect::<Vec<_>>(),
+        ),
+        _ => None,
     };
 
-    view! {
-      <h2 class="text-center display-7 text-dark">Alle nummers</h2>
-      <Suspense fallback=move || {
-          view! { <div>"Loading.."</div> }
-      }>{songs_view}</Suspense>
-    }
-}
-
-#[component]
-pub fn SongView(song: Song) -> impl IntoView {
-    let song_getter = use_context::<Resource<(), Result<Vec<Song>, ServerFnError>>>()
-        .expect("to have the getter provided");
-
-    let set_played_action = create_action(
-        |input: &(i32, Resource<(), Result<Vec<Song>, ServerFnError>>)| {
+    let practice_action = create_action(
+        |input: &(i32, Resource<(), Result<Setlist, ServerFnError>>)| {
             let input = input.to_owned();
             async move {
-                set_song_played(input.0).await.map(|res| {
+                select_next_songs_to_practice(input.0).await.map(|res| {
                     input.1.refetch();
                     res
                 })
@@ -86,42 +77,55 @@ pub fn SongView(song: Song) -> impl IntoView {
         },
     );
 
-    let set_played =
-        use_context::<WriteSignal<Option<i32>>>().expect("to have found the setter provided");
-
     view! {
-      <tr>
-        <td>
-          <button
-            class="btn btn-info"
-            on:click=move |_| {
-                set_played.update(|id| *id = Some(song.id));
-            }
-          >
+      <div class="flex items-center justify-between mb-4 ml-4 mr-4">
+        <div class="font-bold text-2xl">Setlist</div>
+        <button
+          type="button"
+          class="btn btn-accent btn-outline"
+          on:click=move |_| { practice_action.dispatch((4, setlist)) }
+        >
 
-            <i class="bi bi-play-circle-fill"></i>
-          </button>
-        </td>
-        <td>{song.artist}</td>
-        <th>{song.title}</th>
-        <td>
-          {match song.last_played_at {
-              Some(d) => view! { <div>{d.format("%d-%m-%Y").to_string()}</div> },
-              None => view! { <div>"Nooit"</div> },
+          <i class="bi bi-arrow-clockwise"></i>
+          Verander setlist
+        </button>
+      </div>
+      <div>
+        <Suspense fallback=move || {
+            view! { <p>"Loading..."</p> }
+        }>
+          {match setlist_songs() {
+              Some(songs) => {
+                  view! {
+                    <div>
+                      <SongListView songs songs_resource/>
+                    </div>
+                  }
+              }
+              None => view! { <div>Geen nummers</div> },
           }}
 
-        </td>
-        <td>
-          <button
-            class="btn btn-success"
-            on:click=move |_| {
-                set_played_action.dispatch((song.id, song_getter));
-            }
-          >
+        </Suspense>
+      </div>
+      <div class="flex items-center justify-between mb-4 ml-4 mr-4">
+        <div class="font-bold text-2xl">Alle nummers</div>
+      </div>
+      <div>
+        <Suspense fallback=move || {
+            view! { <p>"Loading..."</p> }
+        }>
+          {match songs_resource() {
+              Some(Ok(songs)) => {
+                  view! {
+                    <div>
+                      <SongListView songs songs_resource/>
+                    </div>
+                  }
+              }
+              _ => view! { <div>Geen nummers</div> },
+          }}
 
-            <i class="bi bi-check-circle"></i>
-          </button>
-        </td>
-      </tr>
+        </Suspense>
+      </div>
     }
 }

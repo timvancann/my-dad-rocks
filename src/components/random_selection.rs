@@ -30,10 +30,9 @@ pub async fn get_song(song_id: Option<i32>) -> Result<Song, ServerFnError> {
 }
 
 #[component]
-pub fn RandomSongView(
-    song_id: ReadSignal<Option<i32>>,
-    set_song_id: WriteSignal<Option<i32>>,
-) -> impl IntoView {
+pub fn RandomSongView(is_loading: Signal<bool>) -> impl IntoView {
+    let set_song_id = use_context::<WriteSignal<Option<i32>>>().expect("set_song context expected");
+
     let song_action = create_action(move |_: &()| async move {
         let song = get_random_song().await;
         match song {
@@ -42,48 +41,12 @@ pub fn RandomSongView(
         }
     });
 
-    let song_resource = create_resource(move || song_id.get(), get_song);
-
     view! {
-      <h2 class="text-center display-7 text-dark">Willekeurige selectie</h2>
-      <div class="row">
-        <div class="col">
-          <button class="btn btn-primary" on:click=move |_| { song_action.dispatch(()) }>
-            <i class="bi bi-shuffle"></i>
-            Willekeurig
-          </button>
-        </div>
-        <div class="col">
-          <Suspense fallback=|| {
-              view! { <div>"Loading song"</div> }
-          }>
-            {move || match song_resource.get() {
-                Some(maybe_song) => {
-                    match maybe_song {
-                        Ok(s) => {
-                            view! {
-                              <div>
-                                <SongView song=s/>
-                              </div>
-                            }
-                        }
-                        _ => view! { <div>"No song selected"</div> },
-                    }
-                }
-                None => view! { <div>"No song  selected"</div> },
-            }}
-
-          </Suspense>
-        </div>
-      </div>
-    }
-}
-
-#[component]
-fn SongView(song: Song) -> impl IntoView {
-    view! {
-      <div class="alert alert-info" role="alert">
-        {song.title}
+      <div class="flex justify-center mt-6">
+        <button class="btn btn-primary btn-wide" on:click=move |_| { song_action.dispatch(()) }>
+          <span class="fa-solid fa-shuffle"></span>
+          Willekeurig
+        </button>
       </div>
     }
 }
