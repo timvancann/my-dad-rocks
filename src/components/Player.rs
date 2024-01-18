@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::io::Read;
 
 use crate::components::albumart::AlbumArt;
+use crate::components::random_selection::RandomSongView;
 use crate::models::song::Song;
 
 #[cfg(feature = "ssr")]
@@ -50,32 +51,32 @@ pub fn Player() -> impl IntoView {
           <Suspense fallback=|| {
               view! { <div>"Loading song"</div> }
           }>
-            {move || if let Some(Ok(audio_file)) = audio_file_resource.get() {
-                            let data_uri = create_data_uri_from(audio_file.mp3);
-                            let song = audio_file.song;
-                            view! {
-                              <div class="grid grid-cols-1">
-                                <SelectedSongView song/>
-                                <AudioPlayer data_uri/>
-                              </div>
-                            }
-                        }
-        else {
-        view! { <div>"No song selected"</div> }
-
-        }
-        }
+            {move || {
+                if let Some(Ok(audio_file)) = audio_file_resource.get() {
+                    let data_uri = create_data_uri_from(audio_file.mp3);
+                    let song = audio_file.song;
+                    view! {
+                      <div class="grid grid-cols-1">
+                        <SelectedSongView song/>
+                        <AudioPlayer data_uri/>
+                      </div>
+                    }
+                } else {
+                    view! { <div>"No song selected"</div> }
+                }
+            }}
 
           </Suspense>
         </div>
       </div>
+      <RandomSongView is_loading=audio_file_resource.loading()/>
     }
 }
 
 #[component]
 fn SelectedSongView(song: Song) -> impl IntoView {
     view! {
-      <div class="card card-side bg-slate-100 shadow-xl">
+      <div class="card card-side shadow-xl">
         <figure class="max-w-52">
           <AlbumArt base64_encoded_string=song.album_art/>
         </figure>
@@ -90,7 +91,7 @@ fn SelectedSongView(song: Song) -> impl IntoView {
 #[component]
 fn AudioPlayer(data_uri: String) -> impl IntoView {
     view! {
-      <div class="flex">
+      <div class="flex shadow-xl">
         <audio class="grow" controls src=data_uri></audio>
       </div>
     }

@@ -38,7 +38,6 @@ fn HomePage() -> impl IntoView {
         <Intro/>
         <div class="divider"></div>
         <Player/>
-        <RandomSongView/>
         <div class="divider"></div>
         <AllSongs/>
       </div>

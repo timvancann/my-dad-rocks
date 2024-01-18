@@ -30,7 +30,7 @@ pub async fn get_song(song_id: Option<i32>) -> Result<Song, ServerFnError> {
 }
 
 #[component]
-pub fn RandomSongView() -> impl IntoView {
+pub fn RandomSongView(is_loading: Signal<bool>) -> impl IntoView {
     let set_song_id = use_context::<WriteSignal<Option<i32>>>().expect("set_song context expected");
 
     let song_action = create_action(move |_: &()| async move {
@@ -44,7 +44,7 @@ pub fn RandomSongView() -> impl IntoView {
     view! {
       <div class="flex justify-center mt-6">
         <button class="btn btn-primary btn-wide" on:click=move |_| { song_action.dispatch(()) }>
-          <i class="fa-solid fa-shuffle"></i>
+          <span class="fa-solid fa-shuffle"></span>
           Willekeurig
         </button>
       </div>

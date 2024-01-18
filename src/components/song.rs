@@ -34,7 +34,10 @@ pub fn SongListView(
           <table class="table">
             <thead></thead>
             <tbody>
-              {songs.iter().map(|song| view! {<SongView song=song.clone() songs_resource/>}).collect_view()}
+              {songs
+                  .iter()
+                  .map(|song| view! { <SongView song=song.clone() songs_resource/> })
+                  .collect_view()}
             </tbody>
           </table>
         </div>
