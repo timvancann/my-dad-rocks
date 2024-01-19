@@ -27,6 +27,7 @@ pub async fn is_song_in_practice_slection(song_id: i32) -> Result<bool, ServerFn
 pub fn SongListView(
     songs: Vec<Song>,
     songs_resource: Resource<(), Result<Vec<Song>, ServerFnError>>,
+    setlist_resource: Resource<(), Result<Setlist, ServerFnError>>,
 ) -> impl IntoView {
     view! {
       <Suspense fallback=move || view! { <div></div> }>
@@ -36,7 +37,7 @@ pub fn SongListView(
             <tbody>
               {songs
                   .iter()
-                  .map(|song| view! { <SongView song=song.clone() songs_resource/> })
+                  .map(|song| view! { <SongView song=song.clone() songs_resource setlist_resource/> })
                   .collect_view()}
             </tbody>
           </table>
@@ -45,10 +46,18 @@ pub fn SongListView(
     }
 }
 
+#[server(HandPickSong)]
+pub async fn pick_song(song_id: i32) -> Result<(), ServerFnError> {
+    Setlist::set_songs(vec![song_id])
+        .await
+        .map_err(ServerFnError::from)
+}
+
 #[component]
 pub fn SongView(
     song: Song,
     songs_resource: Resource<(), Result<Vec<Song>, ServerFnError>>,
+    setlist_resource: Resource<(), Result<Setlist, ServerFnError>>,
 ) -> impl IntoView {
     let set_song_id = use_context::<WriteSignal<Option<i32>>>()
         .expect("Expected to have a set_played signal provided");
@@ -58,6 +67,18 @@ pub fn SongView(
             let input = input.to_owned();
             async move {
                 set_song_played(input.0).await.map(|res| {
+                    input.1.refetch();
+                    res
+                })
+            }
+        },
+    );
+
+    let pick_song_action = create_action(
+        |input: &(i32, Resource<(), Result<Setlist, ServerFnError>>)| {
+            let input = input.to_owned();
+            async move {
+                pick_song(input.0).await.map(|res| {
                     input.1.refetch();
                     res
                 })
@@ -100,9 +121,10 @@ pub fn SongView(
           </button>
         </td>
         <td>
+            <div class="join">
           <button
             type="button"
-            class="btn btn-outline btn-error"
+            class="btn btn-outline btn-error join-item"
             on:click=move |_| {
                 set_played_action.dispatch((song.id, songs_resource));
             }
@@ -110,6 +132,17 @@ pub fn SongView(
 
             <i class="fa-solid fa-check"></i>
           </button>
+          <button
+            type="button"
+            class="btn btn-outline btn-error join-item"
+            on:click=move |_| {
+                pick_song_action.dispatch((song.id, setlist_resource));
+            }
+          >
+
+            <i class="fa-solid fa-bookmark"></i>
+          </button>
+        </div>
         </td>
       </tr>
     }
