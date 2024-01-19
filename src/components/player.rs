@@ -46,8 +46,8 @@ pub fn Player() -> impl IntoView {
     }
 
     view! {
-      <div class="flex flex-col items-center justify-center">
-        <div class="text-center">
+      <div class="flex flex-col items-center justify-center sticky top-0 z-10">
+        <div class="text-center bg-base-100">
           <Suspense fallback=|| {
               view! { <div>"Loading song"</div> }
           }>
@@ -57,11 +57,11 @@ pub fn Player() -> impl IntoView {
                     let song = audio_file.song;
                     view! {
                       <div class="grid grid-cols-1">
-        <div class="shadow-lg">
+                        <div class="shadow-lg">
 
-                        <SelectedSongView song/>
-                        <AudioPlayer data_uri/>
-        </div>
+                          <SelectedSongView song/>
+                          <AudioPlayer data_uri/>
+                        </div>
                       </div>
                     }
                 } else {

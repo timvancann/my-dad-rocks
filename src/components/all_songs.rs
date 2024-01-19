@@ -115,7 +115,7 @@ pub fn AllSongs() -> impl IntoView {
             <i class="fa-solid fa-trash"></i>
             Leeg setlist
           </button>
-                </div>
+        </div>
       </div>
       <div>
         <Suspense fallback=move || {
