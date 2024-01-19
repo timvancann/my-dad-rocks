@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE setlists SET songs = $1 WHERE id = 1",
+  "query": "UPDATE setlists SET songs = array_cat(songs, $1) WHERE id = 1",
   "describe": {
     "columns": [],
     "parameters": {
@@ -10,5 +10,5 @@
     },
     "nullable": []
   },
-  "hash": "cb1a367de0ac4ca161610e953802e687a660d44cbeec9523bf104b05e8914308"
+  "hash": "c17fffd2fb089fc4426f37b12e81ac9af5d6e6ff299683356d500abc39ad4c53"
 }

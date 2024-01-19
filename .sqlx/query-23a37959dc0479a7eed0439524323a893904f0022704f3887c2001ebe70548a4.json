@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE setlists SET songs = '{}' WHERE id = 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "23a37959dc0479a7eed0439524323a893904f0022704f3887c2001ebe70548a4"
+}
