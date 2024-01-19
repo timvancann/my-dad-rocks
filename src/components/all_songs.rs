@@ -22,9 +22,11 @@ pub async fn find_unpracticed_unselected_random_song(
 }
 
 #[server(SelectRandomSongs)]
-pub async fn select_next_songs_to_practice(n: i32) -> Result<(), ServerFnError> {
+pub async fn select_next_songs_to_practice(max_n: i32) -> Result<(), ServerFnError> {
+    let setlist = get_setlist().await?;
+    let songs_to_find = max_n - setlist.songs.len() as i32;
     let mut selected: Vec<Song> = Vec::default();
-    for _ in 0..n {
+    for _ in 0..songs_to_find {
         let song = find_unpracticed_unselected_random_song(&selected).await?;
         selected.push(song);
     }
@@ -50,12 +52,17 @@ pub async fn get_setlist() -> Result<Setlist, ServerFnError> {
     }
 }
 
+#[server(CleanSetlist)]
+pub async fn clean_setlist() -> Result<(), ServerFnError> {
+    Setlist::clean().await.map_err(ServerFnError::from)
+}
+
 #[component]
 pub fn AllSongs() -> impl IntoView {
     let songs_resource = create_resource(|| (), |_| async move { get_songs().await });
-    let setlist = create_resource(|| (), |_| async move { get_setlist().await });
+    let setlist_resource = create_resource(|| (), |_| async move { get_setlist().await });
 
-    let setlist_songs = move || match (songs_resource(), setlist()) {
+    let setlist_songs = move || match (songs_resource(), setlist_resource()) {
         (Some(Ok(songs)), Some(Ok(setlist))) => Some(
             songs
                 .into_iter()
@@ -77,18 +84,38 @@ pub fn AllSongs() -> impl IntoView {
         },
     );
 
+    let clear_setlist_action =
+        create_action(|input: &Resource<(), Result<Setlist, ServerFnError>>| {
+            let input = input.to_owned();
+            async move {
+                clean_setlist().await.map(|res| {
+                    input.refetch();
+                    res
+                })
+            }
+        });
+
     view! {
       <div class="flex items-center justify-between mb-4 ml-4 mr-4">
         <div class="font-bold text-2xl">Setlist</div>
-        <button
-          type="button"
-          class="btn btn-accent btn-outline"
-          on:click=move |_| { practice_action.dispatch((4, setlist)) }
-        >
-
-          <i class="bi bi-arrow-clockwise"></i>
-          Verander setlist
-        </button>
+        <div class="join">
+          <button
+            type="button"
+            class="btn btn-accent btn-outline join-item"
+            on:click=move |_| { practice_action.dispatch((4, setlist_resource)) }
+          >
+            <i class="fa-solid fa-rotate-right"></i>
+            Vul setlist
+          </button>
+          <button
+            type="button"
+            class="btn btn-accent btn-outline join-item"
+            on:click=move |_| { clear_setlist_action.dispatch(setlist_resource) }
+          >
+            <i class="fa-solid fa-trash"></i>
+            Leeg setlist
+          </button>
+                </div>
       </div>
       <div>
         <Suspense fallback=move || {
@@ -98,7 +125,7 @@ pub fn AllSongs() -> impl IntoView {
               Some(songs) => {
                   view! {
                     <div>
-                      <SongListView songs songs_resource/>
+                      <SongListView songs songs_resource setlist_resource/>
                     </div>
                   }
               }
@@ -118,7 +145,7 @@ pub fn AllSongs() -> impl IntoView {
               Some(Ok(songs)) => {
                   view! {
                     <div>
-                      <SongListView songs songs_resource/>
+                      <SongListView songs songs_resource setlist_resource/>
                     </div>
                   }
               }

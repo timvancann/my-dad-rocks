@@ -57,8 +57,11 @@ pub fn Player() -> impl IntoView {
                     let song = audio_file.song;
                     view! {
                       <div class="grid grid-cols-1">
+        <div class="shadow-lg">
+
                         <SelectedSongView song/>
                         <AudioPlayer data_uri/>
+        </div>
                       </div>
                     }
                 } else {
@@ -76,7 +79,7 @@ pub fn Player() -> impl IntoView {
 #[component]
 fn SelectedSongView(song: Song) -> impl IntoView {
     view! {
-      <div class="card card-side shadow-xl">
+      <div class="flex card card-side pb-2">
         <figure class="max-w-52">
           <AlbumArt base64_encoded_string=song.album_art/>
         </figure>
@@ -91,7 +94,7 @@ fn SelectedSongView(song: Song) -> impl IntoView {
 #[component]
 fn AudioPlayer(data_uri: String) -> impl IntoView {
     view! {
-      <div class="flex shadow-xl">
+      <div class="flex pb-2">
         <audio class="grow" controls src=data_uri></audio>
       </div>
     }

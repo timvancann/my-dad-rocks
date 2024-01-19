@@ -29,17 +29,41 @@ impl Setlist {
 
     #[cfg(feature = "ssr")]
     pub async fn set_songs(songs: Vec<i32>) -> Result<(), sqlx::Error> {
+        let existing_songs = Setlist::get().await?.songs;
+        let new_songs = songs
+            .iter()
+            .filter(|s| !existing_songs.contains(s))
+            .map(|s| s.to_owned())
+            .collect::<Vec<i32>>();
+
         match Setlist::get().await {
             Ok(setlist) => {
                 if setlist.is_locked {
                     return Err(sqlx::Error::RowNotFound);
                 };
-                sqlx::query!("UPDATE setlists SET songs = $1 WHERE id = 1", &songs)
-                    .execute(crate::database::get_db())
-                    .await
-                    .map(|_| ())
+                sqlx::query!(
+                    "UPDATE setlists SET songs = array_cat(songs, $1) WHERE id = 1",
+                    &new_songs
+                )
+                .execute(crate::database::get_db())
+                .await
+                .map(|_| ())
             }
             Err(e) => return Err(e),
         }
+    }
+
+    #[cfg(feature = "ssr")]
+    pub async fn clean() -> Result<(), sqlx::Error> {
+        sqlx::query!("UPDATE setlists SET songs = '{}' WHERE id = 1")
+            .execute(crate::database::get_db())
+            .await
+            .map(|_| ())
+    }
+
+    #[cfg(feature = "ssr")]
+    pub async fn song_in_setlist(song_id: i32) -> Result<bool, sqlx::Error> {
+        let setlist = Setlist::get().await?;
+        Ok(setlist.songs.contains(&song_id))
     }
 }
