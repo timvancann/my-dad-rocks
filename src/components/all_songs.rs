@@ -1,7 +1,10 @@
 use leptos::*;
+use leptos_meta::*;
+use leptos_router::ActionForm;
 
 use crate::{
-    components::song::SongListView,
+    components::song::{SongListView, SongView},
+    error_template::ErrorTemplate,
     models::{setlist::Setlist, song::Song},
 };
 
@@ -21,9 +24,9 @@ pub async fn find_unpracticed_unselected_random_song(
     ));
 }
 
-#[server(SelectRandomSongs)]
-pub async fn select_next_songs_to_practice(max_n: i32) -> Result<(), ServerFnError> {
-    let setlist = get_setlist().await?;
+#[server(FillSetlist)]
+pub async fn fill_setlist(max_n: i32) -> Result<(), ServerFnError> {
+    let setlist = Setlist::get().await?;
     let songs_to_find = max_n - setlist.songs.len() as i32;
     let mut selected: Vec<Song> = Vec::default();
     for _ in 0..songs_to_find {
@@ -44,65 +47,72 @@ pub async fn get_songs() -> Result<Vec<Song>, ServerFnError> {
     }
 }
 
-#[server(GetSetlist)]
-pub async fn get_setlist() -> Result<Setlist, ServerFnError> {
-    match Setlist::get().await {
-        Ok(setlist) => Ok(setlist),
-        Err(e) => Err(ServerFnError::from(e)),
-    }
-}
-
 #[server(CleanSetlist)]
 pub async fn clean_setlist() -> Result<(), ServerFnError> {
     Setlist::clean().await.map_err(ServerFnError::from)
 }
 
+#[server(SetSongPlayed)]
+pub async fn set_song_played(song_id: i32) -> Result<(), ServerFnError> {
+    logging::log!("Update song played");
+    match Song::set_played(song_id).await {
+        Ok(_) => Ok(()),
+        Err(e) => Err(ServerFnError::from(e)),
+    }
+}
+
+#[server(HandPickSong)]
+pub async fn pick_song(song_id: i32) -> Result<(), ServerFnError> {
+    Setlist::set_songs(vec![song_id])
+        .await
+        .map_err(ServerFnError::from)
+}
+
 #[component]
 pub fn AllSongs() -> impl IntoView {
-    let songs_resource = create_resource(|| (), |_| async move { get_songs().await });
-    let setlist_resource = create_resource(|| (), |_| async move { get_setlist().await });
+    // get_songs actions:
+    // - empty setlist
+    // - fill setlist
+    // - add song to setlist
+    // - set_song_played
 
-    let setlist_songs = move || match (songs_resource(), setlist_resource()) {
-        (Some(Ok(songs)), Some(Ok(setlist))) => Some(
-            songs
-                .into_iter()
-                .filter(|s| setlist.songs.contains(&s.id))
-                .collect::<Vec<_>>(),
-        ),
-        _ => None,
-    };
+    let empty_setlist = create_server_action::<CleanSetlist>();
+    let fill = create_server_action::<FillSetlist>();
 
-    let practice_action = create_action(
-        |input: &(i32, Resource<(), Result<Setlist, ServerFnError>>)| {
-            let input = input.to_owned();
-            async move {
-                select_next_songs_to_practice(input.0).await.map(|res| {
-                    input.1.refetch();
-                    res
-                })
-            }
+    let set_song_played = create_server_action::<SetSongPlayed>();
+    let pick_song = create_server_action::<HandPickSong>();
+
+    let songs_resource = create_resource(
+        move || {
+            (
+                empty_setlist.version().get(),
+                fill.version().get(),
+                set_song_played.version().get(),
+                pick_song.version().get(),
+            )
         },
+        |_| get_songs(),
     );
 
-    let clear_setlist_action =
-        create_action(|input: &Resource<(), Result<Setlist, ServerFnError>>| {
-            let input = input.to_owned();
-            async move {
-                clean_setlist().await.map(|res| {
-                    input.refetch();
-                    res
-                })
-            }
-        });
+    let setlist_resource = move || match songs_resource() {
+        Some(res) => match res {
+            Ok(songs) => Some(Ok(songs
+                .into_iter()
+                .filter(|s| s.is_practice)
+                .collect::<Vec<_>>())),
+            Err(e) => Some(Err(e)),
+        },
+        None => None,
+    };
 
     view! {
       <div class="flex items-center justify-between mb-4 ml-4 mr-4">
         <div class="font-bold text-2xl">Setlist</div>
         <div class="join">
           <button
-            type="button"
+            type="submit"
             class="btn btn-accent btn-outline join-item"
-            on:click=move |_| { practice_action.dispatch((4, setlist_resource)) }
+            on:click=move |_| { fill.dispatch(FillSetlist { max_n: 4 }) }
           >
             <i class="fa-solid fa-rotate-right"></i>
             Vul setlist
@@ -110,49 +120,59 @@ pub fn AllSongs() -> impl IntoView {
           <button
             type="button"
             class="btn btn-accent btn-outline join-item"
-            on:click=move |_| { clear_setlist_action.dispatch(setlist_resource) }
+            on:click=move |_| { empty_setlist.dispatch(CleanSetlist {}) }
           >
             <i class="fa-solid fa-trash"></i>
             Leeg setlist
           </button>
         </div>
       </div>
-      <div>
-        <Suspense fallback=move || {
-            view! { <p>"Loading..."</p> }
+
+      <Transition fallback=move || view! { <p>"Loading..."</p> }>
+        <ErrorBoundary fallback=|errors| {
+            view! { <ErrorTemplate errors=errors/> }
         }>
-          {match setlist_songs() {
-              Some(songs) => {
-                  view! {
-                    <div>
-                      <SongListView songs songs_resource setlist_resource/>
-                    </div>
-                  }
-              }
-              None => view! { <div>Geen nummers</div> },
+          {move || {
+              setlist_resource()
+                  .map(move |songs| match songs {
+                      Err(e) => {
+                          view! { <pre class="error">"Server Error: " {e.to_string()}</pre> }
+                              .into_view()
+                      }
+                      Ok(songs) => {
+                          view! { <SongListView songs pick_song set_song_played/> }.into_view()
+                      }
+                  })
+                  .unwrap_or_default()
           }}
 
-        </Suspense>
-      </div>
+        </ErrorBoundary>
+      </Transition>
+
+      <div class="divider"></div>
       <div class="flex items-center justify-between mb-4 ml-4 mr-4">
         <div class="font-bold text-2xl">Alle nummers</div>
       </div>
-      <div>
-        <Suspense fallback=move || {
-            view! { <p>"Loading..."</p> }
+
+      <Transition fallback=move || view! { <p>"Loading..."</p> }>
+        <ErrorBoundary fallback=|errors| {
+            view! { <ErrorTemplate errors=errors/> }
         }>
-          {match songs_resource() {
-              Some(Ok(songs)) => {
-                  view! {
-                    <div>
-                      <SongListView songs songs_resource setlist_resource/>
-                    </div>
-                  }
-              }
-              _ => view! { <div>Geen nummers</div> },
+          {move || {
+              songs_resource()
+                  .map(move |songs| match songs {
+                      Err(e) => {
+                          view! { <pre class="error">"Server Error: " {e.to_string()}</pre> }
+                              .into_view()
+                      }
+                      Ok(songs) => {
+                          view! { <SongListView songs pick_song set_song_played/> }.into_view()
+                      }
+                  })
+                  .unwrap_or_default()
           }}
 
-        </Suspense>
-      </div>
+        </ErrorBoundary>
+      </Transition>
     }
 }
