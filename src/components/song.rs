@@ -79,7 +79,7 @@ pub fn SongView(
               on:click=move |_| { set_song_played.dispatch(SetSongPlayed { song_id: song.id }) }
             >
 
-              <i class="fa-solid fa-check"></i>
+              <i class="fa-solid fa-calendar-day"></i>
             </button>
             {if song.is_practice {
                 view! {
