@@ -1,6 +1,10 @@
 use leptos::*;
 
-use crate::{components::albumart::AlbumArt, error_template::ErrorTemplate, models::song::Song};
+use crate::{
+    components::{albumart::AlbumArt, song_item::SongItem},
+    error_template::ErrorTemplate,
+    models::song::Song,
+};
 
 use super::all_songs::{HandPickSong, SetSongPlayed};
 
@@ -40,24 +44,7 @@ pub fn SongView(
     view! {
       <tr>
         <td>
-          <div class="flex items-center gap-3">
-            <div class="avatar">
-              <div class="mask mask-squircle w-12 h-12">
-                <AlbumArt base64_encoded_string=song.album_art/>
-              </div>
-            </div>
-            <div>
-              <div class="font-bold">{song.title}</div>
-              <div class="text-sm opacity-70">{song.artist}</div>
-              <div class="badge badge-outline text-sm opacity-50">
-                {match song.last_played_at {
-                    Some(d) => d.format("%d-%m-%Y").to_string(),
-                    None => "Nooit".to_string(),
-                }}
-
-              </div>
-            </div>
-          </div>
+          <SongItem song=song.clone()/>
         </td>
         <td>
           <button
@@ -81,7 +68,7 @@ pub fn SongView(
 
               <i class="fa-solid fa-calendar-day"></i>
             </button>
-            {if song.is_practice {
+            {if song.should_play {
                 view! {
                   <button
                     type="button"

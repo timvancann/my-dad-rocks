@@ -9,7 +9,7 @@ pub struct Song {
     pub last_played_at: Option<NaiveDate>,
     pub audio_file_path: String,
     pub album_art: String,
-    pub is_practice: bool,
+    pub should_play: bool,
 }
 
 impl Song {
@@ -34,9 +34,31 @@ impl Song {
             last_played_at: row.last_played_at,
             audio_file_path: row.audio_file_path.clone(),
             album_art: Song::get_picture_as_base64(row.audio_file_path),
-            is_practice: song_in_setlist,
+            should_play: song_in_setlist,
         })
         .fetch_one(crate::database::get_db())
+        .await
+    }
+
+    #[cfg(feature = "ssr")]
+    pub async fn get_all_in_setlist(setlist_id: i32) -> Result<Vec<Song>, sqlx::Error> {
+        use super::setlist::Setlist;
+        let setlist_songs = Setlist::get_by_id(setlist_id).await?.songs;
+        sqlx::query!(
+            "SELECT 
+              * 
+            FROM songs"
+        )
+        .map(|row| Song {
+            id: row.id,
+            artist: row.artist,
+            title: row.title,
+            last_played_at: row.last_played_at,
+            audio_file_path: row.audio_file_path.clone(),
+            album_art: Song::get_picture_as_base64(row.audio_file_path),
+            should_play: setlist_songs.contains(&row.id),
+        })
+        .fetch_all(crate::database::get_db())
         .await
     }
 
@@ -59,7 +81,7 @@ impl Song {
             last_played_at: row.last_played_at,
             audio_file_path: row.audio_file_path.clone(),
             album_art: Song::get_picture_as_base64(row.audio_file_path),
-            is_practice: setlist_songs.contains(&row.id),
+            should_play: setlist_songs.contains(&row.id),
         })
         .fetch_all(crate::database::get_db())
         .await

@@ -21,6 +21,13 @@ impl Setlist {
     }
 
     #[cfg(feature = "ssr")]
+    pub async fn get_by_id(id: i32) -> Result<Self, sqlx::Error> {
+        sqlx::query_as!(Setlist, "SELECT * FROM setlists WHERE id = $1", id)
+            .fetch_one(crate::database::get_db())
+            .await
+    }
+
+    #[cfg(feature = "ssr")]
     pub async fn get() -> Result<Self, sqlx::Error> {
         sqlx::query_as!(Setlist, "SELECT * FROM setlists WHERE title = 'Oefenen'")
             .fetch_one(crate::database::get_db())

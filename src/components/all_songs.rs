@@ -98,7 +98,7 @@ pub fn AllSongs() -> impl IntoView {
         Some(res) => match res {
             Ok(songs) => Some(Ok(songs
                 .into_iter()
-                .filter(|s| s.is_practice)
+                .filter(|s| s.should_play)
                 .collect::<Vec<_>>())),
             Err(e) => Some(Err(e)),
         },
