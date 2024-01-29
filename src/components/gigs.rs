@@ -84,15 +84,20 @@ pub fn Gig() -> impl IntoView {
     };
 
     view! {
-      <div class="flex justify-end pr-14">
-        <button
-          type="button"
-          class=move || edit_mode_active_class()
-          on:click=move |_| { edit_mode.set(!edit_mode()) }
-        >
+        <div class="mb-4 mt-4">
+      <div class="grid grid-cols-8 gap-2">
+        <div class="col-start-7 col-span-1">
+          <button
+            type="button"
+            class=move || edit_mode_active_class()
+            on:click=move |_| { edit_mode.set(!edit_mode()) }
+          >
 
-          <i class="fa-solid fa-edit"></i>
-        </button>
+            <i class="fa-solid fa-edit"></i>
+          </button>
+        </div>
+            </div>
+
       </div>
       <Transition fallback=move || view! { <p>"Loading..."</p> }>
         <ErrorBoundary fallback=|errors| {
@@ -113,7 +118,9 @@ pub fn Gig() -> impl IntoView {
                               remove_song
                               move_song
                             />
-                            <div class="flex justify-end pr-14">
+        <div class="mb-4 mt-4">
+      <div class="grid grid-cols-8 gap-2">
+        <div class="col-start-7 col-span-2">
                               <button
                                 type="button"
                                 class="btn btn-primary btn-outline"
@@ -130,6 +137,9 @@ pub fn Gig() -> impl IntoView {
                                 Pauze
                               </button>
                             </div>
+        </div>
+        </div>
+
                           }
                               .into_view()
                       }
@@ -178,9 +188,7 @@ pub fn GigSongListView(
     view! {
       <Suspense fallback=move || view! { <div></div> }>
         <div>
-          <table class="table table-xs">
-            <thead></thead>
-            <tbody>
+          <div class="grid grid-cols-8 gap-2">
               {
         let mut songs_indexed: Vec<(usize, SongKind)> = Vec::default();
         let mut break_count = 0usize;
@@ -197,8 +205,7 @@ pub fn GigSongListView(
                   .into_iter()
                   .map(move |(index, song)| view! { <SelectedGigSong index song gig_id remove_song move_song/> })
                   .collect_view()}
-            </tbody>
-          </table>
+          </div>
         </div>
       </Suspense>
     }
@@ -238,6 +245,8 @@ pub fn SelectedGigSong(
     remove_song: Act<RemoveSongFromGig>,
     move_song: Act<MoveSongInGig>,
 ) -> impl IntoView {
+    let edit_mode = use_context::<RwSignal<bool>>().unwrap();
+
     fn buttons(
         song_id: i32,
         gig_id: i32,
@@ -247,7 +256,7 @@ pub fn SelectedGigSong(
         let edit_mode = use_context::<RwSignal<bool>>().unwrap();
         move || match edit_mode() {
             true => view! {
-              <td>
+              <div class="col-span-1">
                 <button
                   type="button"
                   class="btn btn-secondary btn-circle btn-outline"
@@ -262,9 +271,8 @@ pub fn SelectedGigSong(
 
                   <i class="fa-solid fa-minus"></i>
                 </button>
-              </td>
-              <td>
-
+              </div>
+              <div class="col-span-2">
                 <div class="join">
                   <button
                     type="button"
@@ -297,8 +305,7 @@ pub fn SelectedGigSong(
                     <i class="fa-solid fa-chevron-down"></i>
                   </button>
                 </div>
-
-              </td>
+              </div>
             }
             .into_view(),
             false => view! {}.into_view(),
@@ -306,25 +313,30 @@ pub fn SelectedGigSong(
     }
 
     view! {
-      {match song {
+      {
+        let pauze_cols = move || match edit_mode() {
+            true => "col-start-2 col-span-4 font-bold",
+            false => "col-start-2 col-span-7 font-bold"
+        };
+        let song_cols = move || match edit_mode() {
+            true => "col-span-4",
+            false => "col-span-7"
+        };
+        match song {
           SongKind::Break(break_id) => {
               view! {
-                <tr class="">
-                  <td class="flex justify-center items-center font-bold font">"pauze"</td>
+                  <div class={pauze_cols}>"pauze"</div>
                   {buttons(break_id, gig_id, remove_song, move_song)}
-                </tr>
               }
                   .into_view()
           }
           SongKind::Song(s) => {
               view! {
-                <tr>
-                  <td class="font-bold">{index + 1}</td>
-                  <td>
+                  <div class="font-bold col-span-1 pl-5">{index + 1}</div>
+                  <div class={song_cols}>
                     <SongItem song=s.clone()/>
-                  </td>
+                  </div>
                   {buttons(s.id, gig_id, remove_song, move_song)}
-                </tr>
               }
                   .into_view()
           }

@@ -22,7 +22,7 @@ pub fn App() -> impl IntoView {
       <div class="container mx-auto">
         <Router>
           <nav>
-            <div class="navbar bg-neutral z-20">
+            <div class="navbar z-20">
               <div class="navbar-start">
                 <a class="btn btn-ghost text-xl" href="/">My Dad Rocks!</a>
               </div>
