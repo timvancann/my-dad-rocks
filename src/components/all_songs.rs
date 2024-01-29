@@ -70,12 +70,6 @@ pub async fn pick_song(song_id: i32) -> Result<(), ServerFnError> {
 
 #[component]
 pub fn AllSongs() -> impl IntoView {
-    // get_songs actions:
-    // - empty setlist
-    // - fill setlist
-    // - add song to setlist
-    // - set_song_played
-
     let empty_setlist = create_server_action::<CleanSetlist>();
     let fill = create_server_action::<FillSetlist>();
 
@@ -98,7 +92,7 @@ pub fn AllSongs() -> impl IntoView {
         Some(res) => match res {
             Ok(songs) => Some(Ok(songs
                 .into_iter()
-                .filter(|s| s.is_practice)
+                .filter(|s| s.should_play)
                 .collect::<Vec<_>>())),
             Err(e) => Some(Err(e)),
         },
@@ -106,9 +100,9 @@ pub fn AllSongs() -> impl IntoView {
     };
 
     view! {
-      <div class="flex items-center justify-between mb-4 ml-4 mr-4">
-        <div class="font-bold text-2xl">Setlist</div>
-        <div class="join">
+        <div class="grid grid-cols-8 gap-2 mb-4">
+        <div class="font-bold text-2xl col-span-3 ml-3">Setlist</div>
+        <div class="join col-span-4">
           <button
             type="submit"
             class="btn btn-accent btn-outline join-item"

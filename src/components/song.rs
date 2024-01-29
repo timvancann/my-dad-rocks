@@ -1,6 +1,6 @@
 use leptos::*;
 
-use crate::{components::albumart::AlbumArt, error_template::ErrorTemplate, models::song::Song};
+use crate::{components::song_item::SongItem, models::song::Song};
 
 use super::all_songs::{HandPickSong, SetSongPlayed};
 
@@ -13,16 +13,13 @@ pub fn SongListView(
     view! {
       <Suspense fallback=move || view! { <div></div> }>
         <div>
-          <table class="table">
-            <thead></thead>
-            <tbody>
+          <div class="grid grid-cols-8 gap-2">
               {songs
                   .clone()
                   .into_iter()
                   .map(move |song| view! { <SongView song pick_song set_song_played/> })
                   .collect_view()}
-            </tbody>
-          </table>
+          </div>
         </div>
       </Suspense>
     }
@@ -38,28 +35,10 @@ pub fn SongView(
         .expect("Expected to have a set_played signal provided");
 
     view! {
-      <tr>
-        <td>
-          <div class="flex items-center gap-3">
-            <div class="avatar">
-              <div class="mask mask-squircle w-12 h-12">
-                <AlbumArt base64_encoded_string=song.album_art/>
-              </div>
-            </div>
-            <div>
-              <div class="font-bold">{song.title}</div>
-              <div class="text-sm opacity-70">{song.artist}</div>
-              <div class="badge badge-outline text-sm opacity-50">
-                {match song.last_played_at {
-                    Some(d) => d.format("%d-%m-%Y").to_string(),
-                    None => "Nooit".to_string(),
-                }}
-
-              </div>
-            </div>
-          </div>
-        </td>
-        <td>
+        <div class="col-span-5 ml-4">
+          <SongItem song=song.clone()/>
+        </div>
+        <div class="col-span-1">
           <button
             type="button"
             class="btn btn-primary btn-circle"
@@ -70,8 +49,8 @@ pub fn SongView(
 
             <i class="fa fa-play"></i>
           </button>
-        </td>
-        <td>
+        </div>
+        <div class="col-span-2">
           <div class="join">
             <button
               type="button"
@@ -79,9 +58,9 @@ pub fn SongView(
               on:click=move |_| { set_song_played.dispatch(SetSongPlayed { song_id: song.id }) }
             >
 
-              <i class="fa-solid fa-check"></i>
+              <i class="fa-solid fa-calendar-day"></i>
             </button>
-            {if song.is_practice {
+            {if song.should_play {
                 view! {
                   <button
                     type="button"
@@ -106,7 +85,6 @@ pub fn SongView(
             }}
 
           </div>
-        </td>
-      </tr>
+        </div>
     }
 }

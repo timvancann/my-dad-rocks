@@ -95,7 +95,7 @@ fn SelectedSongView(song: Song) -> impl IntoView {
 fn AudioPlayer(data_uri: String) -> impl IntoView {
     view! {
       <div class="flex pb-2">
-        <audio class="grow" controls src=data_uri></audio>
+        <audio class="grow" controls autoplay src=data_uri></audio>
       </div>
     }
 }
