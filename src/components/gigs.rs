@@ -315,8 +315,8 @@ pub fn SelectedGigSong(
     view! {
       {
         let pauze_cols = move || match edit_mode() {
-            true => "col-start-2 col-span-4 font-bold",
-            false => "col-start-2 col-span-7 font-bold"
+            true => "col-start-2 col-span-4 font-bold self-center",
+            false => "col-start-2 col-span-7 font-bold self-center"
         };
         let song_cols = move || match edit_mode() {
             true => "col-span-4",
@@ -332,7 +332,7 @@ pub fn SelectedGigSong(
           }
           SongKind::Song(s) => {
               view! {
-                  <div class="font-bold col-span-1 pl-5">{index + 1}</div>
+                  <div class="font-bold col-span-1 pl-5 self-center">{index + 1}</div>
                   <div class={song_cols}>
                     <SongItem song=s.clone()/>
                   </div>

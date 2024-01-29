@@ -1,10 +1,6 @@
 use leptos::*;
 
-use crate::{
-    components::{albumart::AlbumArt, song_item::SongItem},
-    error_template::ErrorTemplate,
-    models::song::Song,
-};
+use crate::{components::song_item::SongItem, models::song::Song};
 
 use super::all_songs::{HandPickSong, SetSongPlayed};
 
@@ -17,16 +13,13 @@ pub fn SongListView(
     view! {
       <Suspense fallback=move || view! { <div></div> }>
         <div>
-          <table class="table">
-            <thead></thead>
-            <tbody>
+          <div class="grid grid-cols-8 gap-2">
               {songs
                   .clone()
                   .into_iter()
                   .map(move |song| view! { <SongView song pick_song set_song_played/> })
                   .collect_view()}
-            </tbody>
-          </table>
+          </div>
         </div>
       </Suspense>
     }
@@ -42,11 +35,10 @@ pub fn SongView(
         .expect("Expected to have a set_played signal provided");
 
     view! {
-      <tr>
-        <td>
+        <div class="col-span-5 ml-4">
           <SongItem song=song.clone()/>
-        </td>
-        <td>
+        </div>
+        <div class="col-span-1">
           <button
             type="button"
             class="btn btn-primary btn-circle"
@@ -57,8 +49,8 @@ pub fn SongView(
 
             <i class="fa fa-play"></i>
           </button>
-        </td>
-        <td>
+        </div>
+        <div class="col-span-2">
           <div class="join">
             <button
               type="button"
@@ -93,7 +85,6 @@ pub fn SongView(
             }}
 
           </div>
-        </td>
-      </tr>
+        </div>
     }
 }
