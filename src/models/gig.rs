@@ -10,10 +10,11 @@ pub enum SongKind {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-struct GigModel {
+pub struct GigModel {
     pub id: i32,
     pub venue: String,
     pub date: NaiveDate,
+    pub time: Option<String>,
     pub songs: Vec<i32>,
 }
 
@@ -22,6 +23,7 @@ pub struct Gig {
     pub id: i32,
     pub venue: String,
     pub date: NaiveDate,
+    pub time: Option<String>,
     pub songs: Vec<SongKind>,
     pub unselected_songs: Vec<Song>,
 }
@@ -42,6 +44,7 @@ impl Gig {
         Ok(Gig {
             id: gig.id,
             venue: gig.venue,
+            time: gig.time,
             date: gig.date,
             songs: gig
                 .songs
@@ -128,6 +131,70 @@ impl Gig {
             .execute(crate::database::get_db())
             .await?;
 
+        Ok(())
+    }
+
+    #[cfg(feature = "ssr")]
+    pub async fn set_venue(gig_id: usize, venue: String) -> Result<(), sqlx::Error> {
+        sqlx::query!(
+            "UPDATE gigs SET venue = $1 WHERE id = $2",
+            venue,
+            gig_id as i32
+        )
+        .execute(crate::database::get_db())
+        .await?;
+        Ok(())
+    }
+    #[cfg(feature = "ssr")]
+    pub async fn set_time(gig_id: usize, time: String) -> Result<(), sqlx::Error> {
+        sqlx::query!(
+            "UPDATE gigs SET time = $1 WHERE id = $2",
+            time,
+            gig_id as i32
+        )
+        .execute(crate::database::get_db())
+        .await?;
+        Ok(())
+    }
+    #[cfg(feature = "ssr")]
+    pub async fn set_date(gig_id: usize, date: String) -> Result<(), sqlx::Error> {
+        sqlx::query!(
+            "UPDATE gigs SET date = $1 WHERE id = $2",
+            match NaiveDate::parse_from_str(&date, "%Y-%m-%d") {
+                Ok(d) => d,
+                Err(_) => return Err(sqlx::Error::RowNotFound),
+            },
+            gig_id as i32
+        )
+        .execute(crate::database::get_db())
+        .await?;
+        Ok(())
+    }
+
+    #[cfg(feature = "ssr")]
+    pub async fn get_all() -> Result<Vec<GigModel>, sqlx::Error> {
+        sqlx::query_as!(GigModel, "SELECT * FROM gigs ORDER BY date ASC")
+            .fetch_all(crate::database::get_db())
+            .await
+    }
+    #[cfg(feature = "ssr")]
+    pub async fn create() -> Result<(), sqlx::Error> {
+        sqlx::query!(
+            "
+INSERT INTO gigs (venue, date, songs)  VALUES ('Nieuw', $1, '{}');
+",
+            NaiveDate::default()
+        )
+        .execute(crate::database::get_db())
+        .await?;
+        Ok(())
+    }
+
+    #[cfg(feature = "ssr")]
+    pub async fn remove(gig_id: i32) -> Result<(), sqlx::Error> {
+        sqlx::query!("DELETE FROM gigs WHERE id = $1", gig_id)
+            .execute(crate::database::get_db())
+            .await?;
         Ok(())
     }
 }
