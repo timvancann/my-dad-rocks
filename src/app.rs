@@ -1,10 +1,10 @@
-use crate::{
-    components::all_songs::AllSongs,
-    components::{gigs::Gig, player::Player, random_selection::RandomSongView},
-};
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
+
+use crate::components::gigs::Gigs;
+use crate::components::song_text::SongText;
+use crate::components::{gig::Gig, home::HomePage};
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -19,55 +19,35 @@ pub fn App() -> impl IntoView {
       <Title text="My Dad Rocks"/>
 
       // content for this welcome page
-      <div class="container mx-auto">
-        <Router>
-          <nav>
-            <div class="navbar z-20">
-              <div class="navbar-start">
-                <a class="btn btn-ghost text-xl" href="/">My Dad Rocks!</a>
-              </div>
-              <div class="navbar-center flex">
-                <ul class="menu menu-horizontal px-1">
-                  <li>
-                    <a href="/gig/1">Breda 2024</a>
-                  </li>
-                </ul>
-              </div>
+      <Router>
+        <nav>
+          <div class="navbar z-20 bg-base-200 shadow-lg">
+            <div class="flex-1">
+              <a class="btn btn-ghost text-xl" href="/">
+                MDR
+              </a>
             </div>
-          </nav>
+            <div class="flex-none">
+              <ul class="menu menu-horizontal px-1">
+                <li>
+                  <a class="font-bold" href="/gigs">
+                    Gigs
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+        <div class="container mx-auto">
           <main>
             <Routes>
               <Route path="/" view=HomePage/>
+              <Route path="/gigs" view=Gigs/>
               <Route path="/gig/:id" view=Gig/>
+              <Route path="/lyric/:id" view=SongText/>
             </Routes>
-
           </main>
-        </Router>
-      </div>
-    }
-}
-
-/// Renders the home page of your application.
-#[component]
-fn HomePage() -> impl IntoView {
-    let (get_song_id, set_song_id) = create_signal(None::<i32>);
-    provide_context(set_song_id);
-    provide_context(get_song_id);
-
-    view! {
-      <div>
-        <Player/>
-        <div class="divider"></div>
-        <AllSongs/>
-      </div>
-    }
-}
-
-#[component]
-fn Intro() -> impl IntoView {
-    view! {
-      <div class="flex justify-center">
-        <div class="font-bold text-3xl">My Dad Rocks</div>
-      </div>
+        </div>
+      </Router>
     }
 }

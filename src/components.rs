@@ -1,8 +1,9 @@
 pub mod albumart;
-pub mod all_songs;
-pub mod footer;
+pub mod gig;
 pub mod gigs;
+pub mod home;
+pub mod homepage_songs;
 pub mod player;
 pub mod random_selection;
-pub mod song;
 pub mod song_item;
+pub mod song_text;

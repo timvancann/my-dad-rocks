@@ -1,0 +1,147 @@
+use leptos::*;
+use leptos_router::*;
+
+use crate::models::song::Song;
+
+#[derive(Params, PartialEq)]
+struct LyricParams {
+    id: usize,
+}
+
+#[server(GetSong)]
+pub async fn get_song(id: usize) -> Result<Song, ServerFnError> {
+    Song::get(id as i32).await.map_err(ServerFnError::from)
+}
+
+#[component]
+pub fn SongText() -> impl IntoView {
+    let params = use_params::<LyricParams>();
+
+    let edit_mode = create_rw_signal(false);
+    provide_context(edit_mode);
+
+    let id =
+        move || params.with(|params| params.as_ref().map(|params| params.id).unwrap_or_default());
+
+    let update_lyrics = create_server_action::<UpdateLyrics>();
+    let song_resource = create_resource(move || id(), |args| get_song(args));
+
+    view! {
+      <div class="pl-4">
+        <Transition fallback=|| {
+            view! {}.into_view()
+        }>
+          {move || {
+              if let Some(Ok(song)) = song_resource.get() {
+                  view! {
+                    <div class="grid grid-cols-8 gap-2 mb-4 mt-4">
+                      <div>
+                        <h1 class="text-2xl font-semibold col-span-7 col-start-0">
+                          {song.title.to_string()}
+                        </h1>
+                      </div>
+                      <div class="col-start-7 col-span-1 justify-end">
+                        <EditButton song_resource/>
+                      </div>
+                    </div>
+                    {move || match edit_mode() {
+                        true => view! { <EditLyric song=song.clone() update_lyrics/> }.into_view(),
+                        false => view! { <ViewLyric song=song.clone()/> }.into_view(),
+                    }}
+                  }
+                      .into_view()
+              } else {
+                  view! {}.into_view()
+              }
+          }}
+
+        </Transition>
+      </div>
+    }
+}
+
+#[component]
+fn EditButton(song_resource: Resource<usize, Result<Song, ServerFnError>>) -> impl IntoView {
+    let edit_mode =
+        use_context::<RwSignal<bool>>().expect("EditButton must be used within a context");
+
+    let edit_mode_active_class = move || match edit_mode() {
+        true => "btn btn-primary btn-circle",
+        false => "btn btn-primary btn-outline btn-circle",
+    };
+
+    view! {
+      <div class="grid grid-cols-8 gap-2 mb-4 mt-4">
+        <div class="col-start-7 col-span-1 justify-end">
+          <button
+            type="button"
+            class=move || edit_mode_active_class()
+            on:click=move |_| {
+                edit_mode.set(!edit_mode());
+                if !edit_mode() {
+                    song_resource.refetch()
+                }
+            }
+          >
+
+            <i class="fa-solid fa-edit"></i>
+          </button>
+        </div>
+      </div>
+    }
+}
+
+#[server(UpdateLyrics)]
+pub async fn update_lyrics(id: i32, lyrics: String) -> Result<(), ServerFnError> {
+    Song::update_lyrics(id, lyrics)
+        .await
+        .map_err(ServerFnError::from)
+}
+
+#[component]
+fn EditLyric(
+    song: Song,
+    update_lyrics: Action<UpdateLyrics, Result<(), ServerFnError>>,
+) -> impl IntoView {
+    let (lyrics, set_lyrics) = create_signal(song.lyrics);
+
+    view! {
+      <div>
+        <textarea
+          type="text"
+          class="textarea textarea-bordered w-full max-w h-screen white-space:pre;"
+          placeholder="Edit lyrics"
+          on:input=move |e| {
+              update_lyrics
+                  .dispatch(UpdateLyrics {
+                      id: song.id,
+                      lyrics: event_target_value(&e),
+                  })
+          }
+        >
+
+          {lyrics}
+        </textarea>
+      </div>
+    }
+}
+
+#[component]
+fn ViewLyric(song: Song) -> impl IntoView {
+    view! {
+      <div class="white-space:pre;">
+        {song
+            .lyrics
+            .split("\n")
+            .into_iter()
+            .map(|line| {
+                if line.is_empty() {
+                    view! { <br/> }.into_view()
+                } else {
+                    view! { <p class="pt-1 pb-1">{line.to_string()}</p> }.into_view()
+                }
+            })
+            .collect_view()}
+      </div>
+    }
+}

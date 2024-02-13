@@ -22,6 +22,11 @@
         "ordinal": 3,
         "name": "songs",
         "type_info": "Int4Array"
+      },
+      {
+        "ordinal": 4,
+        "name": "time",
+        "type_info": "Varchar"
       }
     ],
     "parameters": {
@@ -33,7 +38,8 @@
       false,
       false,
       false,
-      false
+      false,
+      true
     ]
   },
   "hash": "9d6e88d4e209fe6cde7cf4c8ebd6f709f06e4827c79df5f3e20541e13c71aff6"
