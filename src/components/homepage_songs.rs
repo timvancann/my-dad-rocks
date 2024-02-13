@@ -206,7 +206,7 @@ pub fn SongView(
       <div class="col-span-1">
         <button
           type="button"
-          class="btn btn-primary btn-circle"
+          class="btn btn-primary btn-circle shadow-md"
           on:click=move |_| {
               set_song_id.update(|id| *id = Some(song.id));
           }

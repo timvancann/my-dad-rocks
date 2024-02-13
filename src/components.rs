@@ -6,3 +6,4 @@ pub mod homepage_songs;
 pub mod player;
 pub mod random_selection;
 pub mod song_item;
+pub mod song_text;

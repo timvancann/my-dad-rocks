@@ -18,7 +18,7 @@ pub fn Gigs() -> impl IntoView {
     let gigs_resource = create_resource(move || create_gig.version().get(), |_| get_gigs());
 
     view! {
-      <div>
+      <div class="pt-4 pl-4">
         <button
           type="button"
           class="btn btn-accent"

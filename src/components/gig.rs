@@ -1,6 +1,7 @@
 use leptos::*;
 use leptos_router::*;
 
+use crate::components::player::Player;
 use crate::{
     components::song_item::SongItem,
     error_template::ErrorTemplate,
@@ -92,6 +93,11 @@ pub fn Gig() -> impl IntoView {
     let set_gig_date = create_server_action::<SetGigDate>();
     let remove_gig = create_server_action::<RemoveGig>();
 
+    let (get_song_id, set_song_id) = create_signal(None::<i32>);
+
+    provide_context(set_song_id);
+    provide_context(get_song_id);
+
     let gig_resource = create_resource(
         move || {
             (
@@ -118,7 +124,9 @@ pub fn Gig() -> impl IntoView {
     };
 
     view! {
-        <div class="divider"></div>
+      <Player/>
+      <div class="divider"></div>
+      <div class="divider"></div>
       <Suspense fallback=move || view! { <p>"Loading..."</p> }>
         <div class="grid grid-cols-6 gap-2">
           <div class="col-span-2 font-bold ">Venue</div>
@@ -136,10 +144,12 @@ pub fn Gig() -> impl IntoView {
                           venue: event_target_value(&ev),
                       });
               }
+
               prop:value=move || {
                   if let Some(Ok(gig)) = gig_resource() { gig.venue } else { "".to_string() }
               }
             />
+
           </div>
           <div class="col-span-1">
             <input
@@ -152,6 +162,7 @@ pub fn Gig() -> impl IntoView {
                           time: event_target_value(&ev),
                       });
               }
+
               prop:value=move || {
                   if let Some(Ok(gig)) = gig_resource() {
                       gig.time.unwrap_or("".to_string())
@@ -160,6 +171,7 @@ pub fn Gig() -> impl IntoView {
                   }
               }
             />
+
           </div>
           <div class="col-span-2">
             <input
@@ -172,6 +184,7 @@ pub fn Gig() -> impl IntoView {
                           date: event_target_value(&ev),
                       });
               }
+
               prop:value=move || {
                   if let Some(Ok(gig)) = gig_resource() {
                       gig.date.to_string()
@@ -180,6 +193,7 @@ pub fn Gig() -> impl IntoView {
                   }
               }
             />
+
           </div>
           <div class="col-span-1 justify-end">
             <button
@@ -202,16 +216,16 @@ pub fn Gig() -> impl IntoView {
       <div class="grid grid-cols-8 gap-2 mb-4 mt-4">
         <div class="font-bold text-2xl col-span-3 ml-3">Setlist</div>
         <div class="col-start-7 col-span-1 justify-end">
-            <button
-              type="button"
-              class=move || edit_mode_active_class()
-              on:click=move |_| { edit_mode.set(!edit_mode()) }
-            >
+          <button
+            type="button"
+            class=move || edit_mode_active_class()
+            on:click=move |_| { edit_mode.set(!edit_mode()) }
+          >
 
-              <i class="fa-solid fa-edit"></i>
-            </button>
-          </div>
+            <i class="fa-solid fa-edit"></i>
+          </button>
         </div>
+      </div>
       <Transition fallback=move || view! { <p>"Loading..."</p> }>
         <ErrorBoundary fallback=|errors| {
             view! { <ErrorTemplate errors=errors/> }
@@ -372,6 +386,8 @@ pub fn SelectedGigSong(
         move_song: Act<MoveSongInGig>,
     ) -> impl IntoView {
         let edit_mode = use_context::<RwSignal<bool>>().unwrap();
+        let set_song_id = use_context::<WriteSignal<Option<i32>>>()
+            .expect("Expected to have a set_played signal provided");
         move || match edit_mode() {
             true => view! {
               <div class="col-span-1">
@@ -426,7 +442,27 @@ pub fn SelectedGigSong(
               </div>
             }
             .into_view(),
-            false => view! {}.into_view(),
+            false => {
+                if song_id < 0 {
+                    view! {}.into_view()
+                } else {
+                    view! {
+                      <div class="col-span-1">
+                        <button
+                          type="button"
+                          class="btn btn-primary btn-circle shadow-md"
+                          on:click=move |_| {
+                              set_song_id.update(|id| *id = Some(song_id));
+                          }
+                        >
+
+                          <i class="fa fa-play"></i>
+                        </button>
+                      </div>
+                    }
+                    .into_view()
+                }
+            }
         }
     }
 
@@ -438,7 +474,7 @@ pub fn SelectedGigSong(
           };
           let song_cols = move || match edit_mode() {
               true => "col-span-4",
-              false => "col-span-7",
+              false => "col-span-6",
           };
           match song {
               SongKind::Break(break_id) => {

@@ -46,10 +46,10 @@ pub fn Player() -> impl IntoView {
     }
 
     view! {
-      <div class="flex flex-col items-center justify-center sticky top-0 z-10">
+      <div class="flex flex-col items-center justify-center pt-4 sticky top-0 z-10">
         <div class="text-center bg-base-100">
           <Suspense fallback=|| {
-              view! { <div>"Loading song"</div> }
+              view! { <div class="rounded-lg shadow-lg p-2">"Loading song"</div> }
           }>
             {move || {
                 if let Some(Ok(audio_file)) = audio_file_resource.get() {
@@ -57,15 +57,16 @@ pub fn Player() -> impl IntoView {
                     let song = audio_file.song;
                     view! {
                       <div class="grid grid-cols-1">
-                        <div class="shadow-lg">
+                        <div class="rounded-lg shadow-lg p-2">
 
                           <SelectedSongView song/>
                           <AudioPlayer data_uri/>
                         </div>
                       </div>
                     }
+                        .into_view()
                 } else {
-                    view! { <div>"No song selected"</div> }
+                    view! {}.into_view()
                 }
             }}
 
