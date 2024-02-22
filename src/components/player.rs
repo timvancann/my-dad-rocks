@@ -46,47 +46,41 @@ pub fn Player() -> impl IntoView {
     }
 
     view! {
-      <div class="flex flex-col items-center justify-center pt-4 sticky top-0 z-10">
-        <div class="text-center bg-base-100">
-          <Suspense fallback=|| {
-              view! { <div class="rounded-lg shadow-lg p-2">"Loading song"</div> }
-          }>
-            {move || {
-                if let Some(Ok(audio_file)) = audio_file_resource.get() {
-                    let data_uri = create_data_uri_from(audio_file.mp3);
-                    let song = audio_file.song;
-                    view! {
-                      <div class="grid grid-cols-1">
-                        <div class="rounded-lg shadow-lg p-2">
+      <div class="flex flex-col items-center justify-center sticky top-0 z-10 mx-2">
+        <Suspense fallback=|| {
+            view! { <div class="rounded-lg shadow-lg px-2 py-1">"Loading song"</div> }
+        }>
+          {move || {
+              if let Some(Ok(audio_file)) = audio_file_resource.get() {
+                  let data_uri = create_data_uri_from(audio_file.mp3);
+                  let song = audio_file.song;
+                  view! {
+                    <div class="flex-1 flex-col w-screen rounded-b-lg shadow-lg">
+                      <SelectedSongView song/>
+                      <AudioPlayer data_uri/>
+                    </div>
+                  }
+                      .into_view()
+              } else {
+                  view! {}.into_view()
+              }
+          }}
 
-                          <SelectedSongView song/>
-                          <AudioPlayer data_uri/>
-                        </div>
-                      </div>
-                    }
-                        .into_view()
-                } else {
-                    view! {}.into_view()
-                }
-            }}
-
-          </Suspense>
-        </div>
+        </Suspense>
       </div>
-      <RandomSongView is_loading=audio_file_resource.loading()/>
     }
 }
 
 #[component]
 fn SelectedSongView(song: Song) -> impl IntoView {
     view! {
-      <div class="flex card card-side pb-2">
-        <figure class="max-w-52">
+      <div class="flex grow">
+        <figure class="flex w-20 h-20 mr-4">
           <AlbumArt base64_encoded_string=song.album_art/>
         </figure>
-        <div class="card-body min-w-72">
-          <p class="text-xl font-medium">{song.title}</p>
-          <p>{song.artist}</p>
+        <div class="flex-1 flex-cols">
+          <div class="text-lg font-bold">{song.title}</div>
+          <div>{song.artist}</div>
         </div>
       </div>
     }
@@ -95,7 +89,7 @@ fn SelectedSongView(song: Song) -> impl IntoView {
 #[component]
 fn AudioPlayer(data_uri: String) -> impl IntoView {
     view! {
-      <div class="flex pb-2">
+      <div class="flex">
         <audio class="grow" controls autoplay src=data_uri></audio>
       </div>
     }

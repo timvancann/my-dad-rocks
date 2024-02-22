@@ -2,6 +2,7 @@ use leptos::*;
 use leptos_router::*;
 
 use crate::components::player::Player;
+use crate::components::shared::Horizontal;
 use crate::{
     components::song_item::SongItem,
     error_template::ErrorTemplate,
@@ -119,103 +120,94 @@ pub fn Gig() -> impl IntoView {
     };
 
     let edit_mode_active_class = move || match edit_mode() {
-        true => "btn btn-primary btn-circle",
-        false => "btn btn-primary btn-outline btn-circle",
+        true => "border-2 rounded-full px-3 py-2 shadow-lg  border-ctp-yellow text-ctp-text",
+        false => "border-0 rounded-full px-3 py-2 shadow-lg bg-ctp-yellow text-ctp-mantle",
     };
 
     view! {
       <Player/>
-      <div class="divider"></div>
-      <div class="divider"></div>
       <Suspense fallback=move || view! { <p>"Loading..."</p> }>
-        <div class="grid grid-cols-6 gap-2">
-          <div class="col-span-2 font-bold ">Venue</div>
-          <div class="col-span-1 font-bold">Tijd</div>
-          <div class="col-span-3 font-bold">Datum (yyyy-mm-dd)</div>
+        <div class="flex flex-col mt-2">
+          <div class="flex gap-2 mx-2">
+            {if let Some(Ok(gig)) = gig_resource() {
+                view! {
+                  <InputWithLabel
+                    label="Venue".to_string()
+                    value=gig.venue
+                    on:input=move |ev| {
+                        set_gig_venue
+                            .dispatch(SetGigVenue {
+                                gig_id: id(),
+                                venue: event_target_value(&ev),
+                            });
+                    }
+                  />
 
-          <div class="col-span-2">
-            <input
-              type="text"
-              class="input input-bordered w-full max-w-xs"
-              on:input=move |ev| {
-                  set_gig_venue
-                      .dispatch(SetGigVenue {
-                          gig_id: id(),
-                          venue: event_target_value(&ev),
-                      });
-              }
+                  <InputWithLabel
+                    label="Tijd".to_string()
+                    value=gig.time.unwrap_or("".to_string())
+                    on:input=move |ev| {
+                        set_gig_time
+                            .dispatch(SetGigTime {
+                                gig_id: id(),
+                                time: event_target_value(&ev),
+                            });
+                    }
+                  />
 
-              prop:value=move || {
-                  if let Some(Ok(gig)) = gig_resource() { gig.venue } else { "".to_string() }
-              }
-            />
+                  <InputWithLabel
+                    label="Datum".to_string()
+                    value=if let Some(Ok(gig)) = gig_resource() {
+                        gig.venue
+                    } else {
+                        "".to_string()
+                    }
 
-          </div>
-          <div class="col-span-1">
-            <input
-              type="text"
-              class="input input-bordered w-full max-w-xs"
-              on:input=move |ev| {
-                  set_gig_time
-                      .dispatch(SetGigTime {
-                          gig_id: id(),
-                          time: event_target_value(&ev),
-                      });
-              }
+                    on:input=move |ev| {
+                        set_gig_date
+                            .dispatch(SetGigDate {
+                                gig_id: id(),
+                                date: event_target_value(&ev),
+                            });
+                    }
+                  />
+                }
+                    .into_view()
+            } else {
+                view! { <div></div> }.into_view()
+            }}
+            {move || {
+                if edit_mode() {
+                    view! {
+                      <div class="self-end">
+                        <button
+                          type="submit"
+                          class="border-0 rounded-full px-3 py-2 shadow-lg bg-ctp-maroon text-ctp-mantle"
+                          on:click=move |_| {
+                              remove_gig.dispatch(RemoveGig { gig_id: id() });
+                              use_navigate()("/gigs", Default::default());
+                          }
+                        >
 
-              prop:value=move || {
-                  if let Some(Ok(gig)) = gig_resource() {
-                      gig.time.unwrap_or("".to_string())
-                  } else {
-                      "".to_string()
-                  }
-              }
-            />
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </div>
+                    }
+                        .into_view()
+                } else {
+                    view! { <div></div> }.into_view()
+                }
+            }}
 
-          </div>
-          <div class="col-span-2">
-            <input
-              type="text"
-              class="input input-bordered w-full max-w-xs"
-              on:input=move |ev| {
-                  set_gig_date
-                      .dispatch(SetGigDate {
-                          gig_id: id(),
-                          date: event_target_value(&ev),
-                      });
-              }
-
-              prop:value=move || {
-                  if let Some(Ok(gig)) = gig_resource() {
-                      gig.date.to_string()
-                  } else {
-                      "".to_string()
-                  }
-              }
-            />
-
-          </div>
-          <div class="col-span-1 justify-end">
-            <button
-              type="submit"
-              class="btn btn-error btn-circle"
-              on:click=move |_| {
-                  remove_gig.dispatch(RemoveGig { gig_id: id() });
-                  use_navigate()("/gigs", Default::default());
-              }
-            >
-
-              <i class="fa-solid fa-trash"></i>
-            </button>
           </div>
         </div>
       </Suspense>
 
-      <div class="divider"></div>
+      <Horizontal/>
 
-      <div class="grid grid-cols-8 gap-2 mb-4 mt-4">
-        <div class="font-bold text-2xl col-span-3 ml-3">Setlist</div>
-        <div class="col-start-7 col-span-1 justify-end">
+      <div class="flex justify-between mx-2 mb-4 mt-2">
+        <div class="font-bold text-xl">Setlist</div>
+        <div>
           <button
             type="button"
             class=move || edit_mode_active_class()
@@ -245,26 +237,23 @@ pub fn Gig() -> impl IntoView {
                               remove_song
                               move_song
                             />
-                            <div class="mb-4 mt-4">
-                              <div class="grid grid-cols-8 gap-2">
-                                <div class="col-start-7 col-span-2 justify-end">
-                                  <button
-                                    type="button"
-                                    class="btn btn-primary btn-outline"
-                                    on:click=move |_| {
-                                        add_song
-                                            .dispatch(AddSongToGig {
-                                                gig_id: g.id,
-                                                song_id: -1,
-                                            })
-                                    }
-                                  >
+                            <Horizontal/>
+                            <div class="flex justify-end mr-2 mt-4 mb-2">
+                              <button
+                                type="button"
+                                class="border-0 rounded-full px-3 py-2 shadow-md bg-ctp-teal text-ctp-mantle"
+                                on:click=move |_| {
+                                    add_song
+                                        .dispatch(AddSongToGig {
+                                            gig_id: g.id,
+                                            song_id: -1,
+                                        })
+                                }
+                              >
 
-                                    <i class="fa-solid fa-pause"></i>
-                                    Pauze
-                                  </button>
-                                </div>
-                              </div>
+                                <i class="fa-solid fa-pause"></i>
+                                Pauze
+                              </button>
                             </div>
                           }
                               .into_view()
@@ -274,9 +263,8 @@ pub fn Gig() -> impl IntoView {
           }}
 
         </ErrorBoundary>
-      </Transition>
 
-      <div class="divider"></div>
+      </Transition>
 
       <Transition fallback=move || view! { <p>"Loading..."</p> }>
         <ErrorBoundary fallback=|errors| {
@@ -313,29 +301,27 @@ pub fn GigSongListView(
 ) -> impl IntoView {
     view! {
       <Suspense fallback=move || view! { <div></div> }>
-        <div>
-          <div class="grid grid-cols-8 gap-2">
+        <div class="flex flex-col mx-2">
 
-            {
-                let mut songs_indexed: Vec<(usize, SongKind)> = Vec::default();
-                let mut break_count = 0usize;
-                for song in songs.iter().enumerate() {
-                    if let SongKind::Break(_) = song.1 {
-                        break_count += 1;
-                        songs_indexed.push((0, song.1.clone()));
-                    } else {
-                        songs_indexed.push((song.0 - break_count, song.1.clone()));
-                    }
-                }
-                songs_indexed
-                    .into_iter()
-                    .map(move |(index, song)| {
-                        view! { <SelectedGigSong index song gig_id remove_song move_song/> }
-                    })
-                    .collect_view()
-            }
+          {
+              let mut songs_indexed: Vec<(usize, SongKind)> = Vec::default();
+              let mut break_count = 0usize;
+              for song in songs.iter().enumerate() {
+                  if let SongKind::Break(_) = song.1 {
+                      break_count += 1;
+                      songs_indexed.push((0, song.1.clone()));
+                  } else {
+                      songs_indexed.push((song.0 - break_count, song.1.clone()));
+                  }
+              }
+              songs_indexed
+                  .into_iter()
+                  .map(move |(index, song)| {
+                      view! { <SelectedGigSong index song gig_id remove_song move_song/> }
+                  })
+                  .collect_view()
+          }
 
-          </div>
         </div>
       </Suspense>
     }
@@ -349,21 +335,17 @@ pub fn GigUnselectedSongListView(
 ) -> impl IntoView {
     view! {
       <Suspense fallback=move || view! { <div></div> }>
-        <div>
-          <table class="table table-xs">
-            <thead></thead>
-            <tbody>
-
-              {songs
-                  .clone()
-                  .into_iter()
-                  .enumerate()
-                  .map(move |(index, song)| {
-                      view! { <UnSelectedGigSong index song gig_id add_song/> }
-                  })
-                  .collect_view()}
-            </tbody>
-          </table>
+        <div class="flex flex-col mx-2 gap-2">
+          <div>
+            {songs
+                .clone()
+                .into_iter()
+                .enumerate()
+                .map(move |(index, song)| {
+                    view! { <UnSelectedGigSong index song gig_id add_song/> }
+                })
+                .collect_view()}
+          </div>
         </div>
       </Suspense>
     }
@@ -390,56 +372,50 @@ pub fn SelectedGigSong(
             .expect("Expected to have a set_played signal provided");
         move || match edit_mode() {
             true => view! {
-              <div class="col-span-1">
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-circle btn-outline"
-                  on:click=move |_| {
-                      remove_song
-                          .dispatch(RemoveSongFromGig {
-                              gig_id: gig_id,
-                              song_id: song_id,
-                          })
-                  }
-                >
+              <button
+                type="button"
+                class="border-0 rounded-full px-3 py-2 shadow-md bg-ctp-maroon text-ctp-mantle"
+                on:click=move |_| {
+                    remove_song
+                        .dispatch(RemoveSongFromGig {
+                            gig_id: gig_id,
+                            song_id: song_id,
+                        })
+                }
+              >
 
-                  <i class="fa-solid fa-minus"></i>
-                </button>
-              </div>
-              <div class="col-span-2">
-                <div class="join">
-                  <button
-                    type="button"
-                    class="btn btn-neutral join-item"
-                    on:click=move |_| {
-                        move_song
-                            .dispatch(MoveSongInGig {
-                                gig_id: gig_id,
-                                song_id: song_id,
-                                kind: MoveKind::Up,
-                            })
-                    }
-                  >
+                <i class="fa-solid fa-minus"></i>
+              </button>
+              <button
+                type="button"
+                class="border-0 rounded-l-md px-3 py-2 ml-2 mr-0.5 shadow-md bg-ctp-lavender text-ctp-mantle"
+                on:click=move |_| {
+                    move_song
+                        .dispatch(MoveSongInGig {
+                            gig_id: gig_id,
+                            song_id: song_id,
+                            kind: MoveKind::Up,
+                        })
+                }
+              >
 
-                    <i class="fa-solid fa-chevron-up"></i>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-neutral join-item"
-                    on:click=move |_| {
-                        move_song
-                            .dispatch(MoveSongInGig {
-                                gig_id: gig_id,
-                                song_id: song_id,
-                                kind: MoveKind::Down,
-                            })
-                    }
-                  >
+                <i class="fa-solid fa-chevron-up"></i>
+              </button>
+              <button
+                type="button"
+                class="border-0 rounded-r-md px-3 py-2 shadow-md bg-ctp-lavender text-ctp-mantle"
+                on:click=move |_| {
+                    move_song
+                        .dispatch(MoveSongInGig {
+                            gig_id: gig_id,
+                            song_id: song_id,
+                            kind: MoveKind::Down,
+                        })
+                }
+              >
 
-                    <i class="fa-solid fa-chevron-down"></i>
-                  </button>
-                </div>
-              </div>
+                <i class="fa-solid fa-chevron-down"></i>
+              </button>
             }
             .into_view(),
             false => {
@@ -447,10 +423,10 @@ pub fn SelectedGigSong(
                     view! {}.into_view()
                 } else {
                     view! {
-                      <div class="col-span-1">
+                      <div class="">
                         <button
                           type="button"
-                          class="btn btn-primary btn-circle shadow-md"
+                          class="border-0 rounded-full px-3 py-2 shadow-lg bg-ctp-green text-ctp-mantle"
                           on:click=move |_| {
                               set_song_id.update(|id| *id = Some(song_id));
                           }
@@ -467,35 +443,29 @@ pub fn SelectedGigSong(
     }
 
     view! {
-      {
-          let pauze_cols = move || match edit_mode() {
-              true => "col-start-2 col-span-4 font-bold self-center",
-              false => "col-start-2 col-span-7 font-bold self-center",
-          };
-          let song_cols = move || match edit_mode() {
-              true => "col-span-4",
-              false => "col-span-6",
-          };
-          match song {
-              SongKind::Break(break_id) => {
-                  view! {
-                    <div class=pauze_cols>"pauze"</div>
-                    {buttons(break_id, gig_id, remove_song, move_song)}
-                  }
-                      .into_view()
+      {match song {
+          SongKind::Break(break_id) => {
+              view! {
+                <div class="flex flow-row justify-between">
+                  <div class="place-self-center font-bold text-sm ml-6 my-3">pauze</div>
+                  <div>{buttons(break_id, gig_id, remove_song, move_song)}</div>
+                </div>
               }
-              SongKind::Song(s) => {
-                  view! {
-                    <div class="font-bold col-span-1 pl-5 self-center">{index + 1}</div>
-                    <div class=song_cols>
-                      <SongItem song=s.clone()/>
-                    </div>
-                    {buttons(s.id, gig_id, remove_song, move_song)}
-                  }
-                      .into_view()
-              }
+                  .into_view()
           }
-      }
+          SongKind::Song(s) => {
+              view! {
+                <div class="flex flow-row justify-between">
+                  <div class="flex">
+                    <div class="font-medium text-sm self-center mr-2 w-2">{index + 1}</div>
+                    <SongItem song=s.clone()/>
+                  </div>
+                  <div>{buttons(s.id, gig_id, remove_song, move_song)}</div>
+                </div>
+              }
+                  .into_view()
+          }
+      }}
     }
 }
 
@@ -507,27 +477,39 @@ pub fn UnSelectedGigSong(
     add_song: Act<AddSongToGig>,
 ) -> impl IntoView {
     view! {
-      <tr>
-        <td>
-          <SongItem song=song.clone()/>
-        </td>
-        <td>
-          <button
-            type="button"
-            class="btn btn-primary btn-outline btn-circle"
-            on:click=move |_| {
-                add_song
-                    .dispatch(AddSongToGig {
-                        gig_id: gig_id,
-                        song_id: song.id,
-                    })
-            }
-          >
+      <div class="flex justify-between items-center">
+        <SongItem song=song.clone()/>
+        <button
+          type="button"
+          class="border-0 rounded-full px-3 py-2 shadow-md bg-ctp-teal text-ctp-mantle"
+          on:click=move |_| {
+              add_song
+                  .dispatch(AddSongToGig {
+                      gig_id: gig_id,
+                      song_id: song.id,
+                  })
+          }
+        >
 
-            <i class="fa-solid fa-plus"></i>
-          </button>
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+    }
+}
 
-        </td>
-      </tr>
+#[component]
+pub fn InputWithLabel(label: String, value: String) -> impl IntoView {
+    view! {
+      <div>
+        <label class="block text-sm font-medium leading-6">{label}</label>
+        <div class="relative mt-2 rounded-md shadow-sm">
+          <input
+            type="text"
+            class="input block w-full rounded-md border-0 py-2 pl-2 ring-1 ring-inset ring-ctp-surface0 focus:ring-2 focus:ring-inset focus:ring-ctp-flamingo"
+            prop:value=value
+            placeholder="Venue"
+          />
+        </div>
+      </div>
     }
 }

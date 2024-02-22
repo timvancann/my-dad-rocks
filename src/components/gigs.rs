@@ -21,13 +21,13 @@ pub fn Gigs() -> impl IntoView {
       <div class="pt-4 pl-4">
         <button
           type="button"
-          class="btn btn-accent"
+          class="border-0 rounded-full px-3 py-2 shadow-md bg-ctp-teal text-ctp-mantle"
           on:click=move |_| { create_gig.dispatch(CreateGig {}) }
         >
           <i class="fa-solid fa-plus"></i>
           Nieuw optreden
         </button>
-        <ul class="timeline timeline-vertical">
+        <ol class="relative border-s border-gray-200 mx-2 mt-4">
           <Suspense fallback=move || {
               view! { <p>"Loading..."</p> }
           }>
@@ -42,7 +42,8 @@ pub fn Gigs() -> impl IntoView {
             }}
 
           </Suspense>
-        </ul>
+        </ol>
+
       </div>
     }
     .into_view()
@@ -51,20 +52,18 @@ pub fn Gigs() -> impl IntoView {
 #[component]
 pub fn Timeline(gig: GigModel) -> impl IntoView {
     view! {
-      <li>
-        <hr/>
-        <div class="timeline-start">
-          <a href=format!("/gig/{}", gig.id)>{gig.date.to_string()}</a>
-        </div>
-        <div class="timeline-middle">
-          <a href=format!("/gig/{}", gig.id)>
-            <i class="fas fa-circle"></i>
-          </a>
-        </div>
-        <div class="timeline-end timeline-box">
-          <a href=format!("/gig/{}", gig.id)>{gig.venue}</a>
-        </div>
-        <hr/>
+      <li class="mb-10 ms-6">
+
+        <a href=format!("/gig/{}", gig.id)>
+          <span class="absolute flex items-center justify-center w-4 h-4 mt-4 rounded-full -start-2 ring-8 bg-ctp-surface1 ring-ctp-surface1">
+            <i class="fas fa-calendar-day"></i>
+          </span>
+          <h3 class="flex items-center mb-1 text-lg font-semibold text-ctp-text">{gig.venue}</h3>
+          <time class="block mb-2 text-sm font-normal leading-none text-ctp-overlay0">
+            {gig.date.to_string()}
+          </time>
+        // <p class="mb-4 text-base font-normal text-ctp-subtext1">Besloten feest</p>
+        </a>
       </li>
     }
     .into_view()

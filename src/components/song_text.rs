@@ -27,20 +27,18 @@ pub fn SongText() -> impl IntoView {
     let song_resource = create_resource(move || id(), |args| get_song(args));
 
     view! {
-      <div class="pl-4">
+      <div class="m-2">
         <Transition fallback=|| {
             view! {}.into_view()
         }>
           {move || {
               if let Some(Ok(song)) = song_resource.get() {
                   view! {
-                    <div class="grid grid-cols-8 gap-2 mb-4 mt-4">
+                    <div class="flex items-center justify-between">
                       <div>
-                        <h1 class="text-2xl font-semibold col-span-7 col-start-0">
-                          {song.title.to_string()}
-                        </h1>
+                        <div class="text-xl font-bold text-nowrap">{song.title.to_string()}</div>
                       </div>
-                      <div class="col-start-7 col-span-1 justify-end">
+                      <div class="flex">
                         <EditButton song_resource/>
                       </div>
                     </div>
@@ -66,28 +64,24 @@ fn EditButton(song_resource: Resource<usize, Result<Song, ServerFnError>>) -> im
         use_context::<RwSignal<bool>>().expect("EditButton must be used within a context");
 
     let edit_mode_active_class = move || match edit_mode() {
-        true => "btn btn-primary btn-circle",
-        false => "btn btn-primary btn-outline btn-circle",
+        true => "rounded-full border-2 p-3",
+        false => "rounded-full border-2 p-3 bg-ctp-mauve text-ctp-crust",
     };
 
     view! {
-      <div class="grid grid-cols-8 gap-2 mb-4 mt-4">
-        <div class="col-start-7 col-span-1 justify-end">
-          <button
-            type="button"
-            class=move || edit_mode_active_class()
-            on:click=move |_| {
-                edit_mode.set(!edit_mode());
-                if !edit_mode() {
-                    song_resource.refetch()
-                }
+      <button
+        type="button"
+        class=move || edit_mode_active_class()
+        on:click=move |_| {
+            edit_mode.set(!edit_mode());
+            if !edit_mode() {
+                song_resource.refetch()
             }
-          >
+        }
+      >
 
-            <i class="fa-solid fa-edit"></i>
-          </button>
-        </div>
-      </div>
+        <i class="fa-solid fa-edit"></i>
+      </button>
     }
 }
 
@@ -106,10 +100,10 @@ fn EditLyric(
     let (lyrics, set_lyrics) = create_signal(song.lyrics);
 
     view! {
-      <div>
+      <div class="mt-2">
         <textarea
           type="text"
-          class="textarea textarea-bordered w-full max-w h-screen white-space:pre;"
+          class="textarea textarea-bordered w-full max-w p-2 h-screen white-space:pre;"
           placeholder="Edit lyrics"
           on:input=move |e| {
               update_lyrics
@@ -129,7 +123,7 @@ fn EditLyric(
 #[component]
 fn ViewLyric(song: Song) -> impl IntoView {
     view! {
-      <div class="white-space:pre;">
+      <div class="white-space:pre; mt-2">
         {song
             .lyrics
             .split("\n")
@@ -138,7 +132,7 @@ fn ViewLyric(song: Song) -> impl IntoView {
                 if line.is_empty() {
                     view! { <br/> }.into_view()
                 } else {
-                    view! { <p class="pt-1 pb-1">{line.to_string()}</p> }.into_view()
+                    view! { <p class="m-1">{line.to_string()}</p> }.into_view()
                 }
             })
             .collect_view()}

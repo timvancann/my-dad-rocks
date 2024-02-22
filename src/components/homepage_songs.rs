@@ -1,6 +1,7 @@
 use leptos::*;
 use serde::{Deserialize, Serialize};
 
+use crate::components::shared::Horizontal;
 use crate::components::song_item::SongItem;
 use crate::models::setlist::Setlist;
 use crate::{error_template::ErrorTemplate, models::song::Song};
@@ -97,24 +98,25 @@ pub fn Songs() -> impl IntoView {
     );
 
     view! {
-      <div class="grid grid-cols-8 gap-2 mb-4">
-        <div class="font-bold text-2xl col-span-3 ml-3">Setlist</div>
-        <div class="join col-span-4">
+      <div class="flex justify-between m-3 items-center">
+        <div class="font-bold text-xl flex">Setlist</div>
+        <div class="join flex">
           <button
             type="submit"
-            class="btn btn-accent btn-outline join-item"
+            class="border-0 border-md rounded-l-lg mr-1 px-2 py-1 shadow-md bg-ctp-teal text-ctp-mantle"
             on:click=move |_| { fill.dispatch(FillSetlist { max_n: 4 }) }
           >
             <i class="fa-solid fa-rotate-right"></i>
-            Vul setlist
+            Vullen
           </button>
           <button
+
             type="button"
-            class="btn btn-accent btn-outline join-item"
+            class="border-0 border-md rounded-r-lg px-2 py-1 shadow-md bg-ctp-teal text-ctp-mantle"
             on:click=move |_| { empty_setlist.dispatch(CleanSetlist {}) }
           >
             <i class="fa-solid fa-trash"></i>
-            Leeg setlist
+            Legen
           </button>
         </div>
       </div>
@@ -126,9 +128,10 @@ pub fn Songs() -> impl IntoView {
         picker=|hpr: HomePageSongs| { hpr.setlist }
       />
 
-      <div class="divider"></div>
-      <div class="flex items-center justify-between mb-4 ml-4 mr-4">
-        <div class="font-bold text-2xl">Alle nummers</div>
+      <Horizontal/>
+
+      <div class="flex items-center justify-between mb-3 ml-3">
+        <div class="font-bold text-xl">Alle nummers</div>
       </div>
 
       <HomePageSongs
@@ -174,7 +177,7 @@ pub fn SongListView(
 ) -> impl IntoView {
     view! {
       <Suspense fallback=move || view! { <div></div> }>
-        <div class="grid grid-cols-8 gap-2">
+        <div class="grid grid-flow-row auto-rows-max gap-2">
           {songs
               .clone()
               .into_iter()
@@ -195,31 +198,31 @@ pub fn SongView(
         .expect("Expected to have a set_played signal provided");
 
     let bookmark_class = match song.should_play {
-        true => "btn btn-outline btn-error btn-disabled join-item",
-        false => "btn btn-outline btn-error join-item",
+        true => "border-0 rounded-r-md px-3 py-2 shadow-md bg-ctp-rosewater text-ctp-mantle",
+        false => "border-0 rounded-r-md px-3 py-2 shadow-md bg-ctp-flamingo text-ctp-mantle",
     };
 
     view! {
-      <div class="col-span-5 ml-4">
-        <SongItem song=song.clone()/>
-      </div>
-      <div class="col-span-1">
-        <button
-          type="button"
-          class="btn btn-primary btn-circle shadow-md"
-          on:click=move |_| {
-              set_song_id.update(|id| *id = Some(song.id));
-          }
-        >
-
-          <i class="fa fa-play"></i>
-        </button>
-      </div>
-      <div class="col-span-2">
-        <div class="join">
+      <div class="ml-2 flex">
+        <div class="flex-1">
+          <SongItem song=song.clone()/>
+        </div>
+        <div class="flex items-center mr-2">
           <button
             type="button"
-            class="btn btn-outline btn-error join-item"
+            class="border-0 rounded-full px-3 py-2 shadow-lg bg-ctp-green text-ctp-mantle"
+            on:click=move |_| {
+                set_song_id.update(|id| *id = Some(song.id));
+            }
+          >
+
+            <i class="fa fa-play"></i>
+          </button>
+        </div>
+        <div class="flex justify-end mr-2 items-center">
+          <button
+            type="button"
+            class="border-0 rounded-l-md px-3 py-2 mr-0.5 shadow-md bg-ctp-flamingo text-ctp-mantle"
             on:click=move |_| { set_song_played.dispatch(SetSongPlayed { song_id: song.id }) }
           >
 
@@ -228,7 +231,12 @@ pub fn SongView(
           <button
             type="button"
             class=move || bookmark_class
-            on:click=move |_| { pick_song.dispatch(HandPickSong { song_id: song.id }) }
+            on:click=move |_| {
+                if song.should_play {
+                    return;
+                }
+                pick_song.dispatch(HandPickSong { song_id: song.id })
+            }
           >
 
             <i class="fa-solid fa-bookmark"></i>

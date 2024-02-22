@@ -42,9 +42,9 @@ pub fn RandomSongView(is_loading: Signal<bool>) -> impl IntoView {
     });
 
     view! {
-      <div class="flex justify-center mt-6">
+      <div class="flex justify-center mt-4">
         <button
-          class="btn btn-primary btn-wide shadow-md"
+          class="border-0 rounded-full px-3 py-2 shadow-lg bg-ctp-green text-ctp-mantle"
           on:click=move |_| { song_action.dispatch(()) }
         >
           <span class="fa-solid fa-shuffle"></span>
