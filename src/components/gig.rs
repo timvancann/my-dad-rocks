@@ -158,7 +158,7 @@ pub fn Gig() -> impl IntoView {
                   <InputWithLabel
                     label="Datum".to_string()
                     value=if let Some(Ok(gig)) = gig_resource() {
-                        gig.venue
+                        gig.date.to_string()
                     } else {
                         "".to_string()
                     }
@@ -485,7 +485,7 @@ pub fn UnSelectedGigSong(
           on:click=move |_| {
               add_song
                   .dispatch(AddSongToGig {
-                      gig_id: gig_id,
+                      gig_id,
                       song_id: song.id,
                   })
           }
@@ -502,7 +502,7 @@ pub fn InputWithLabel(label: String, value: String) -> impl IntoView {
     view! {
       <div>
         <label class="block text-sm font-medium leading-6">{label}</label>
-        <div class="relative mt-2 rounded-md shadow-sm">
+        <div class="relative mt-2 rounded-md shadow-sm text-sm">
           <input
             type="text"
             class="input block w-full rounded-md border-0 py-2 pl-2 ring-1 ring-inset ring-ctp-surface0 focus:ring-2 focus:ring-inset focus:ring-ctp-flamingo"
