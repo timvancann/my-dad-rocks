@@ -21,8 +21,7 @@ pub fn App() -> impl IntoView {
       // content for this welcome page
       <body class="bg-ctp-base text-ctp-text">
         <Router>
-
-          <nav class="bg-ctp-surface0 shadow-md">
+          <nav class="bg-ctp-surface0 shadow-md z-100">
             <div class="mx-auto max-w px-4 py-2">
               <div class="flex flex-1 items-center justify-center items-stretch justify-start">
                 <div class="flex flex-1 items-center">

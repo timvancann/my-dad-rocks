@@ -79,6 +79,10 @@ struct GigParams {
 #[component]
 pub fn Gig() -> impl IntoView {
     let edit_mode = create_rw_signal(false);
+    let (get_song_id, set_song_id) = create_signal(None::<i32>);
+
+    provide_context(set_song_id);
+    provide_context(get_song_id);
 
     provide_context(edit_mode);
 
@@ -218,7 +222,7 @@ pub fn Gig() -> impl IntoView {
           </button>
         </div>
       </div>
-      <Transition fallback=move || view! { <p>"Loading..."</p> }>
+      <Suspense fallback=move || view! { <p>"Loading..."</p> }>
         <ErrorBoundary fallback=|errors| {
             view! { <ErrorTemplate errors=errors/> }
         }>
@@ -264,9 +268,9 @@ pub fn Gig() -> impl IntoView {
 
         </ErrorBoundary>
 
-      </Transition>
+      </Suspense>
 
-      <Transition fallback=move || view! { <p>"Loading..."</p> }>
+      <Suspense fallback=move || view! { <p>"Loading..."</p> }>
         <ErrorBoundary fallback=|errors| {
             view! { <ErrorTemplate errors=errors/> }
         }>
@@ -286,7 +290,7 @@ pub fn Gig() -> impl IntoView {
           }}
 
         </ErrorBoundary>
-      </Transition>
+      </Suspense>
     }
 }
 
@@ -458,7 +462,7 @@ pub fn SelectedGigSong(
                 <div class="flex flow-row justify-between">
                   <div class="flex">
                     <div class="font-medium text-sm self-center mr-2 w-2">{index + 1}</div>
-                    <SongItem song=s.clone()/>
+                  // <SongItem song=s.clone()/>
                   </div>
                   <div>{buttons(s.id, gig_id, remove_song, move_song)}</div>
                 </div>
@@ -478,7 +482,7 @@ pub fn UnSelectedGigSong(
 ) -> impl IntoView {
     view! {
       <div class="flex justify-between items-center">
-        <SongItem song=song.clone()/>
+        // <SongItem song=song.clone()/>
         <button
           type="button"
           class="border-0 rounded-full px-3 py-2 shadow-md bg-ctp-teal text-ctp-mantle"

@@ -28,7 +28,7 @@ pub fn SongText() -> impl IntoView {
 
     view! {
       <div class="m-2">
-        <Transition fallback=|| {
+        <Suspense fallback=|| {
             view! {}.into_view()
         }>
           {move || {
@@ -53,7 +53,7 @@ pub fn SongText() -> impl IntoView {
               }
           }}
 
-        </Transition>
+        </Suspense>
       </div>
     }
 }

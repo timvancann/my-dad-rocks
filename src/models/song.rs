@@ -13,6 +13,21 @@ pub struct Song {
     pub lyrics: String,
 }
 
+impl Default for Song {
+    fn default() -> Self {
+        Song {
+            id: 0,
+            artist: "".to_string(),
+            title: "".to_string(),
+            last_played_at: None,
+            audio_file_path: "".to_string(),
+            album_art: "".to_string(),
+            should_play: false,
+            lyrics: "".to_string(),
+        }
+    }
+}
+
 #[cfg(feature = "ssr")]
 type Result<T> = std::result::Result<T, sqlx::Error>;
 
