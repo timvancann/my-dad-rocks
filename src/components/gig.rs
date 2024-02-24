@@ -3,6 +3,7 @@ use leptos_router::*;
 
 use crate::components::player::Player;
 use crate::components::shared::Horizontal;
+use crate::models;
 use crate::{
     components::song_item::SongItem,
     error_template::ErrorTemplate,
@@ -121,14 +122,6 @@ pub fn Gig() -> impl IntoView {
         |args| get_gig(args.3),
     );
 
-    let unselected_songs_resource = move || match gig_resource.get() {
-        Some(res) => match res {
-            Ok(gig) => Some(Ok((gig.id, gig.unselected_songs))),
-            Err(e) => Some(Err(e)),
-        },
-        None => None,
-    };
-
     let edit_mode_active_class = move || match edit_mode.get() {
         true => "border-2 rounded-full px-3 py-2 shadow-lg  border-ctp-yellow text-ctp-text",
         false => "border-0 rounded-full px-3 py-2 shadow-lg bg-ctp-yellow text-ctp-mantle",
@@ -136,7 +129,7 @@ pub fn Gig() -> impl IntoView {
 
     view! {
       <Player/>
-      <Suspense fallback=move || view! { <p>"Loading..."</p> }>
+      <Transition fallback=move || view! { <p>"Loading..."</p> }>
         <div class="flex flex-col mt-2">
           <div class="flex gap-2 mx-2">
             {if let Some(Ok(gig)) = gig_resource.get() {
@@ -211,7 +204,7 @@ pub fn Gig() -> impl IntoView {
 
           </div>
         </div>
-      </Suspense>
+      </Transition>
 
       <Horizontal/>
 
@@ -228,149 +221,134 @@ pub fn Gig() -> impl IntoView {
           </button>
         </div>
       </div>
-      <Suspense fallback=move || view! { <p>"Loading..."</p> }>
-        <ErrorBoundary fallback=|errors| {
-            view! { <ErrorTemplate errors=errors/> }
-        }>
-          {move || {
-              gig_resource.get()
-                  .map(move |gig| match gig {
-                      Err(e) => {
-                          view! { <pre class="error">"Server Error: " {e.to_string()}</pre> }
-                              .into_view()
-                      }
-                      Ok(g) => {
-                          view! {
-                            <GigSongListView
-                              songs=g.songs.clone()
-                              gig_id=g.id
-                              remove_song
-                              move_song
-                            />
-                            <Horizontal/>
-                            <div class="flex justify-end mr-2 mt-4 mb-2">
-                              <button
-                                type="button"
-                                class="border-0 rounded-full px-3 py-2 shadow-md bg-ctp-teal text-ctp-mantle"
-                                on:click=move |_| {
-                                    add_song
-                                        .dispatch(AddSongToGig {
-                                            gig_id: g.id,
-                                            song_id: -1,
-                                        })
-                                }
-                              >
 
-                                <i class="fa-solid fa-pause"></i>
-                                Pauze
-                              </button>
-                            </div>
+      <div class="mx-2">
+      <Transition fallback=move || {
+          view! { <p>"Loading..."</p> }
+      }>
+        <For
+          {move || gig_resource.track()}
+          each=move || {
+              gig_resource
+                  .get()
+                  .unwrap_or_else(|| Ok(Gig::default()))
+                  .unwrap_or_default()
+                  .songs
+                  .into_iter()
+                  .enumerate()
+          }
+
+          key=|(_, state)| state.clone()
+          children=move |(index, _)| {
+              let song = create_memo(move |_| {
+                  gig_resource
+                      .and_then(|data| {
+                          let song = data.songs.get(index).unwrap().clone();
+                          SelectedSong {
+                              song: song.1.clone(),
+                              index: song.0,
+                              gig_id: data.id,
                           }
-                              .into_view()
-                      }
-                  })
+                      })
+                      .unwrap_or(Ok(SelectedSong::default()))
+                      .unwrap_or_default()
+              });
+              move || {
+                  view! { <SelectedGigSong selected_song=song.get() remove_song move_song/> }
+                      .into_view()
+              }
+          }
+        />
+
+      </Transition>
+      </div>
+
+      <Horizontal/>
+      <div class="flex justify-end mr-2 mt-4 mb-2">
+      <Transition>
+        {move || {
+            let gig_id = gig_resource
+                .get()
+                .unwrap_or_else(|| Ok(Gig::default()))
+                .unwrap_or_default()
+                .id;
+            view! {
+              <button
+                type="button"
+                class="border-0 rounded-full px-3 py-2 shadow-md bg-ctp-teal text-ctp-mantle"
+                on:click=move |_| {
+                    add_song
+                        .dispatch(AddSongToGig {
+                            gig_id,
+                            song_id: -1,
+                        })
+                }
+              >
+
+                <i class="fa-solid fa-pause"></i>
+                Pauze
+              </button>
+            }
+        }}
+
+        </Transition>
+      </div>
+
+      <div class="mx-2">
+      <Transition fallback=move || {
+          view! { <p>"Loading..."</p> }
+      }>
+        <For
+          {move || gig_resource.track()}
+          each=move || {
+              gig_resource
+                  .get()
+                  .unwrap_or_else(|| Ok(Gig::default()))
                   .unwrap_or_default()
-          }}
+                  .unselected_songs
+                  .into_iter()
+                  .enumerate()
+          }
 
-        </ErrorBoundary>
+          key=|(_, state)| state.clone()
+          children=move |(index, _)| {
+              let song = create_memo(move |_| {
+                  gig_resource
+                      .and_then(|data| {
+                          let song = data.unselected_songs.get(index).unwrap().clone();
+                          SelectedSong {
+                              song: models::gig::SongKind::Song(song.clone()),
+                              index: 1,
+                              gig_id: data.id,
+                          }
+                      })
+                      .unwrap_or(Ok(SelectedSong::default()))
+                      .unwrap_or_default()
+              });
+              move || view! { <UnSelectedGigSong selected_song=song.get() add_song/> }.into_view()
+          }
+        />
 
-      </Suspense>
-
-      <Suspense fallback=move || view! { <p>"Loading..."</p> }>
-        <ErrorBoundary fallback=|errors| {
-            view! { <ErrorTemplate errors=errors/> }
-        }>
-          {move || {
-              unselected_songs_resource()
-                  .map(move |songs| match songs {
-                      Err(e) => {
-                          view! { <pre class="error">"Server Error: " {e.to_string()}</pre> }
-                              .into_view()
-                      }
-                      Ok(s) => {
-                          view! { <GigUnselectedSongListView songs=s.1 gig_id=s.0 add_song/> }
-                              .into_view()
-                      }
-                  })
-                  .unwrap_or_default()
-          }}
-
-        </ErrorBoundary>
-      </Suspense>
+      </Transition>
+      </div>
     }
 }
 
 type Act<T> = Action<T, Result<(), ServerFnError>>;
 
-#[component]
-pub fn GigSongListView(
-    songs: Vec<SongKind>,
+#[derive(PartialEq, Default, Clone)]
+pub struct SelectedSong {
+    index: usize,
+    song: SongKind,
     gig_id: i32,
-    remove_song: Act<RemoveSongFromGig>,
-    move_song: Act<MoveSongInGig>,
-) -> impl IntoView {
-    view! {
-      <Suspense fallback=move || view! { <div></div> }>
-        <div class="flex flex-col mx-2">
-
-          {
-              let mut songs_indexed: Vec<(usize, SongKind)> = Vec::default();
-              let mut break_count = 0usize;
-              for song in songs.iter().enumerate() {
-                  if let SongKind::Break(_) = song.1 {
-                      break_count += 1;
-                      songs_indexed.push((0, song.1.clone()));
-                  } else {
-                      songs_indexed.push((song.0 - break_count, song.1.clone()));
-                  }
-              }
-              songs_indexed
-                  .into_iter()
-                  .map(move |(index, song)| {
-                      view! { <SelectedGigSong index song gig_id remove_song move_song/> }
-                  })
-                  .collect_view()
-          }
-
-        </div>
-      </Suspense>
-    }
-}
-
-#[component]
-pub fn GigUnselectedSongListView(
-    songs: Vec<Song>,
-    gig_id: i32,
-    add_song: Act<AddSongToGig>,
-) -> impl IntoView {
-    view! {
-      <Suspense fallback=move || view! { <div></div> }>
-        <div class="flex flex-col mx-2 gap-2">
-          <div>
-            {songs
-                .clone()
-                .into_iter()
-                .enumerate()
-                .map(move |(index, song)| {
-                    view! { <UnSelectedGigSong index song gig_id add_song/> }
-                })
-                .collect_view()}
-          </div>
-        </div>
-      </Suspense>
-    }
 }
 
 #[component]
 pub fn SelectedGigSong(
-    index: usize,
-    song: SongKind,
-    gig_id: i32,
+    selected_song: SelectedSong,
     remove_song: Act<RemoveSongFromGig>,
     move_song: Act<MoveSongInGig>,
 ) -> impl IntoView {
-    let edit_mode = use_context::<RwSignal<bool>>().unwrap();
-
     fn buttons(
         song_id: i32,
         gig_id: i32,
@@ -403,8 +381,8 @@ pub fn SelectedGigSong(
                 on:click=move |_| {
                     move_song
                         .dispatch(MoveSongInGig {
-                             gig_id,
-                             song_id,
+                            gig_id,
+                            song_id,
                             kind: MoveKind::Up,
                         })
                 }
@@ -455,12 +433,12 @@ pub fn SelectedGigSong(
     }
 
     view! {
-      {match song {
+      {match selected_song.song {
           SongKind::Break(break_id) => {
               view! {
                 <div class="flex flow-row justify-between">
                   <div class="place-self-center font-bold text-sm ml-6 my-3">pauze</div>
-                  <div>{buttons(break_id, gig_id, remove_song, move_song)}</div>
+                  <div>{buttons(break_id, selected_song.gig_id, remove_song, move_song)}</div>
                 </div>
               }
                   .into_view()
@@ -469,10 +447,12 @@ pub fn SelectedGigSong(
               view! {
                 <div class="flex flow-row justify-between">
                   <div class="flex">
-                    <div class="font-medium text-sm self-center mr-2 w-2">{index + 1}</div>
-                  // <SongItem song=s.clone()/>
+                    <div class="font-medium text-xs self-center mr-2 justify-self-end">
+                      {selected_song.index + 1}
+                    </div>
+                    <SongItem song=s.clone()/>
                   </div>
-                  <div>{buttons(s.id, gig_id, remove_song, move_song)}</div>
+                  <div>{buttons(s.id, selected_song.gig_id, remove_song, move_song)}</div>
                 </div>
               }
                   .into_view()
@@ -483,21 +463,23 @@ pub fn SelectedGigSong(
 
 #[component]
 pub fn UnSelectedGigSong(
-    index: usize,
-    song: Song,
-    gig_id: i32,
+    selected_song: SelectedSong,
     add_song: Act<AddSongToGig>,
 ) -> impl IntoView {
+    let song = match selected_song.song{
+        SongKind::Song(s) => s,
+        _ => return view! { <div></div> },
+    };
     view! {
       <div class="flex justify-between items-center">
-        // <SongItem song=song.clone()/>
+        <SongItem song=song.clone()/>
         <button
           type="button"
           class="border-0 rounded-full px-3 py-2 shadow-md bg-ctp-teal text-ctp-mantle"
           on:click=move |_| {
               add_song
                   .dispatch(AddSongToGig {
-                      gig_id,
+                      gig_id: selected_song.gig_id,
                       song_id: song.id,
                   })
           }

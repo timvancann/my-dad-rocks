@@ -3,10 +3,16 @@ use serde::{Deserialize, Serialize};
 
 use super::song::Song;
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub enum SongKind {
     Break(i32),
     Song(Song),
+}
+
+impl Default for SongKind {
+    fn default() -> Self {
+        Self::Break(-1)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -24,8 +30,21 @@ pub struct Gig {
     pub venue: String,
     pub date: NaiveDate,
     pub time: Option<String>,
-    pub songs: Vec<SongKind>,
+    pub songs: Vec<(usize, SongKind)>,
     pub unselected_songs: Vec<Song>,
+}
+
+impl Default for Gig {
+    fn default() -> Self {
+        Self {
+            id: 0,
+            venue: "".to_string(),
+            date: NaiveDate::default(),
+            time: None,
+            songs: Vec::default(),
+            unselected_songs: Vec::default(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
@@ -41,27 +60,43 @@ impl Gig {
         let gig = sqlx::query_as!(GigModel, "SELECT * FROM gigs WHERE id = $1", id)
             .fetch_one(crate::database::get_db())
             .await?;
-        Ok(Gig {
+
+        let songs_in_gig: Vec<SongKind> = gig
+            .songs
+            .iter()
+            .map(|s| {
+                if s < &0 {
+                    SongKind::Break(*s)
+                } else {
+                    SongKind::Song(songs.iter().find(|song| song.id == *s).unwrap().clone())
+                }
+            })
+            .collect();
+
+        let mut songs_indexed: Vec<(usize, SongKind)> = Vec::default();
+        let mut break_count = 0usize;
+        for song in songs_in_gig.iter().enumerate() {
+            if let SongKind::Break(_) = song.1 {
+                break_count += 1;
+                songs_indexed.push((0, song.1.clone()));
+            } else {
+                songs_indexed.push((song.0 - break_count, song.1.clone()));
+            }
+        }
+
+        let gig = Gig {
             id: gig.id,
             venue: gig.venue,
             time: gig.time,
             date: gig.date,
-            songs: gig
-                .songs
-                .iter()
-                .map(|s| {
-                    if s < &0 {
-                        SongKind::Break(*s)
-                    } else {
-                        SongKind::Song(songs.iter().find(|song| song.id == *s).unwrap().clone())
-                    }
-                })
-                .collect(),
+            songs: songs_indexed,
             unselected_songs: songs
                 .into_iter()
                 .filter(|s| !gig.songs.contains(&s.id))
                 .collect(),
-        })
+        };
+
+        Ok(gig)
     }
 
     #[cfg(feature = "ssr")]

@@ -96,100 +96,100 @@ pub fn Songs() -> impl IntoView {
         );
 
     view! {
-          <div class="flex justify-between m-3 items-center">
-            <div class="font-bold text-xl flex">Setlist</div>
-            <div class="flex">
+      <div class="flex justify-between m-3 items-center">
+        <div class="font-bold text-xl flex">Setlist</div>
+        <div class="flex">
 
-              <button
-                type="submit"
-                class="border-0 border-md rounded-l-lg mr-1 px-2 py-1 shadow-md bg-ctp-teal text-ctp-mantle"
-                on:click=move |_| { fill.dispatch(FillSetlist { max_n: 4 }) }
-              >
-                <i class="fa-solid fa-rotate-right"></i>
-                Vullen
-              </button>
+          <button
+            type="submit"
+            class="border-0 border-md rounded-l-lg mr-1 px-2 py-1 shadow-md bg-ctp-teal text-ctp-mantle"
+            on:click=move |_| { fill.dispatch(FillSetlist { max_n: 4 }) }
+          >
+            <i class="fa-solid fa-rotate-right"></i>
+            Vullen
+          </button>
 
-              <button
+          <button
 
-                type="button"
-                class="border-0 border-md rounded-r-lg px-2 py-1 shadow-md bg-ctp-teal text-ctp-mantle"
-                on:click=move |_| { empty_setlist.dispatch(CleanSetlist {}) }
-              >
-                <i class="fa-solid fa-trash"></i>
-                Legen
-              </button>
+            type="button"
+            class="border-0 border-md rounded-r-lg px-2 py-1 shadow-md bg-ctp-teal text-ctp-mantle"
+            on:click=move |_| { empty_setlist.dispatch(CleanSetlist {}) }
+          >
+            <i class="fa-solid fa-trash"></i>
+            Legen
+          </button>
 
-            </div>
-          </div>
-        <div class="grid grid-flow-row auto-rows-max gap-2">
-          <Transition fallback=move || {
-              view! { <p>"Loading..."</p> }
-          }>
-
-            <For
-              {move || songs_resource.track()}
-              each=move || {
-                  songs_resource
-                      .get()
-                      .unwrap_or_else(|| Ok(vec![]))
-                      .unwrap_or_default()
-                      .into_iter()
-                      .enumerate()
-                      .filter(|(_, s)| s.should_play)
-              }
-
-              key=|(_, state)| state.clone()
-              children=move |(index, _)| {
-                  let song = create_memo(move |_| {
-                      songs_resource
-                          .and_then(|data| { data.get(index).unwrap().clone() })
-                          .unwrap_or(Ok(Song::default()))
-                          .unwrap_or_default()
-                  });
-                  move || view! { <SongView song=song.get() pick_song set_song_played/> }.into_view()
-              }
-            />
-
-          </Transition>
         </div>
+      </div>
+      <div class="grid grid-flow-row auto-rows-max gap-2">
+        <Transition fallback=move || {
+            view! { <p>"Loading..."</p> }
+        }>
 
-          <Horizontal/>
-    
-          <div class="flex items-center justify-between mb-3 ml-3">
-            <div class="font-bold text-xl">Alle nummers</div>
-          </div>
-        <div class="grid grid-flow-row auto-rows-max gap-2">
-            <Transition fallback=move || {
-                view! { <p>"Loading..."</p> }
-            }>
+          <For
+            {move || songs_resource.track()}
+            each=move || {
+                songs_resource
+                    .get()
+                    .unwrap_or_else(|| Ok(vec![]))
+                    .unwrap_or_default()
+                    .into_iter()
+                    .enumerate()
+                    .filter(|(_, s)| s.should_play)
+            }
 
-              <For
-                {move || songs_resource.track()}
-                each=move || {
+            key=|(_, state)| state.clone()
+            children=move |(index, _)| {
+                let song = create_memo(move |_| {
                     songs_resource
-                        .get()
-                        .unwrap_or_else(|| Ok(vec![]))
+                        .and_then(|data| { data.get(index).unwrap().clone() })
+                        .unwrap_or(Ok(Song::default()))
                         .unwrap_or_default()
-                        .into_iter()
-                        .enumerate()
-                        .filter(|(_, s)| !s.should_play)
-                }
+                });
+                move || view! { <SongView song=song.get() pick_song set_song_played/> }.into_view()
+            }
+          />
 
-                key=|(_, state)| state.clone()
-                children=move |(index, _)| {
-                    let song = create_memo(move |_| {
-                        songs_resource
-                            .and_then(|data| { data.get(index).unwrap().clone() })
-                            .unwrap_or(Ok(Song::default()))
-                            .unwrap_or_default()
-                    });
-                    move || view! { <SongView song=song.get() pick_song set_song_played/> }.into_view()
-                }
-              />
+        </Transition>
+      </div>
 
-            </Transition>
-          </div>
-        }
+      <Horizontal/>
+
+      <div class="flex items-center justify-between mb-3 ml-3">
+        <div class="font-bold text-xl">Alle nummers</div>
+      </div>
+      <div class="grid grid-flow-row auto-rows-max gap-2">
+        <Transition fallback=move || {
+            view! { <p>"Loading..."</p> }
+        }>
+
+          <For
+            {move || songs_resource.track()}
+            each=move || {
+                songs_resource
+                    .get()
+                    .unwrap_or_else(|| Ok(vec![]))
+                    .unwrap_or_default()
+                    .into_iter()
+                    .enumerate()
+                    .filter(|(_, s)| !s.should_play)
+            }
+
+            key=|(_, state)| state.clone()
+            children=move |(index, _)| {
+                let song = create_memo(move |_| {
+                    songs_resource
+                        .and_then(|data| { data.get(index).unwrap().clone() })
+                        .unwrap_or(Ok(Song::default()))
+                        .unwrap_or_default()
+                });
+                move || view! { <SongView song=song.get() pick_song set_song_played/> }.into_view()
+            }
+          />
+
+        </Transition>
+      </div>
+    }
 }
 
 #[component]

@@ -876,6 +876,10 @@ video {
   align-self: center;
 }
 
+.justify-self-end {
+  justify-self: end;
+}
+
 .text-nowrap {
   text-wrap: nowrap;
 }
