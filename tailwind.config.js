@@ -8,11 +8,15 @@ module.exports = {
   },
   plugins: [
     require("@tailwindcss/typography"),
-    require("daisyui"),
+    //require("daisyui"),
+    require("@catppuccin/tailwindcss")({
+      prefix: "ctp",
+      defaultFlavour: "latte",
+    }),
   ],
-  daisyui: {
-    themes: ["emerald", "dim", "dark", "cupcake"],
-    darkTheme: "dim",
-  },
+  //daisyui: {
+  //  themes: ["emerald", "dim", "dark", "cupcake"],
+  //  darkTheme: "dim",
+  //},
 }
 
