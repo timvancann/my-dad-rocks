@@ -170,7 +170,7 @@ impl Gig {
     }
 
     #[cfg(feature = "ssr")]
-    pub async fn set_venue(gig_id: usize, venue: String) -> Result<(), sqlx::Error> {
+    pub async fn set_venue(gig_id: i32, venue: String) -> Result<(), sqlx::Error> {
         sqlx::query!(
             "UPDATE gigs SET venue = $1 WHERE id = $2",
             venue,
@@ -181,7 +181,7 @@ impl Gig {
         Ok(())
     }
     #[cfg(feature = "ssr")]
-    pub async fn set_time(gig_id: usize, time: String) -> Result<(), sqlx::Error> {
+    pub async fn set_time(gig_id: i32, time: String) -> Result<(), sqlx::Error> {
         sqlx::query!(
             "UPDATE gigs SET time = $1 WHERE id = $2",
             time,
@@ -192,7 +192,7 @@ impl Gig {
         Ok(())
     }
     #[cfg(feature = "ssr")]
-    pub async fn set_date(gig_id: usize, date: String) -> Result<(), sqlx::Error> {
+    pub async fn set_date(gig_id: i32, date: String) -> Result<(), sqlx::Error> {
         sqlx::query!(
             "UPDATE gigs SET date = $1 WHERE id = $2",
             match NaiveDate::parse_from_str(&date, "%Y-%m-%d") {

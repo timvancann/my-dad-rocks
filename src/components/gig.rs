@@ -6,11 +6,7 @@ use crate::components::shared::Horizontal;
 use crate::models;
 use crate::{
     components::song_item::SongItem,
-    error_template::ErrorTemplate,
-    models::{
-        gig::{Gig, MoveKind, SongKind},
-        song::Song,
-    },
+    models::gig::{Gig, MoveKind, SongKind},
 };
 
 #[server(GetGig)]
@@ -43,21 +39,21 @@ pub async fn move_song_gig(gig_id: i32, song_id: i32, kind: MoveKind) -> Result<
 }
 
 #[server(SetGigVenue)]
-async fn set_gig_venue(gig_id: usize, venue: String) -> Result<(), ServerFnError> {
+async fn set_gig_venue(gig_id: i32, venue: String) -> Result<(), ServerFnError> {
     Gig::set_venue(gig_id, venue)
         .await
         .map_err(ServerFnError::from)
 }
 
 #[server(SetGigTime)]
-async fn set_gig_time(gig_id: usize, time: String) -> Result<(), ServerFnError> {
+async fn set_gig_time(gig_id: i32, time: String) -> Result<(), ServerFnError> {
     Gig::set_time(gig_id, time)
         .await
         .map_err(ServerFnError::from)
 }
 
 #[server(SetGigDate)]
-async fn set_gig_date(gig_id: usize, date: String) -> Result<(), ServerFnError> {
+async fn set_gig_date(gig_id: i32, date: String) -> Result<(), ServerFnError> {
     Gig::set_date(gig_id, date)
         .await
         .map_err(ServerFnError::from)
@@ -129,10 +125,14 @@ pub fn Gig() -> impl IntoView {
 
     view! {
       <Player/>
-      <Transition fallback=move || view! { <p>"Loading..."</p> }>
-        <div class="flex flex-col mt-2">
-          <div class="flex gap-2 mx-2">
-            {if let Some(Ok(gig)) = gig_resource.get() {
+      <div class="flex flex-col mt-2">
+        <div class="flex gap-2 mx-2">
+          <Transition>
+            {
+                let gig = gig_resource
+                    .get()
+                    .unwrap_or_else(|| Ok(Gig::default()))
+                    .unwrap_or_default();
                 view! {
                   <InputWithLabel
                     label="Venue".to_string()
@@ -140,7 +140,7 @@ pub fn Gig() -> impl IntoView {
                     on:input=move |ev| {
                         set_gig_venue
                             .dispatch(SetGigVenue {
-                                gig_id: id(),
+                                gig_id: gig.id,
                                 venue: event_target_value(&ev),
                             });
                     }
@@ -152,7 +152,7 @@ pub fn Gig() -> impl IntoView {
                     on:input=move |ev| {
                         set_gig_time
                             .dispatch(SetGigTime {
-                                gig_id: id(),
+                                gig_id: gig.id,
                                 time: event_target_value(&ev),
                             });
                     }
@@ -169,42 +169,40 @@ pub fn Gig() -> impl IntoView {
                     on:input=move |ev| {
                         set_gig_date
                             .dispatch(SetGigDate {
-                                gig_id: id(),
+                                gig_id: gig.id,
                                 date: event_target_value(&ev),
                             });
                     }
                   />
-                }
-                    .into_view()
-            } else {
-                view! { <div></div> }.into_view()
-            }}
-            {move || {
-                if edit_mode.get() {
-                    view! {
-                      <div class="self-end">
-                        <button
-                          type="submit"
-                          class="border-0 rounded-full px-3 py-2 shadow-lg bg-ctp-maroon text-ctp-mantle"
-                          on:click=move |_| {
-                              remove_gig.dispatch(RemoveGig { gig_id: id() });
-                              use_navigate()("/gigs", Default::default());
+
+                  {move || {
+                      if edit_mode.get() {
+                          view! {
+                            <div class="self-end">
+                              <button
+                                type="submit"
+                                class="border-0 rounded-full px-3 py-2 shadow-lg bg-ctp-maroon text-ctp-mantle"
+                                on:click=move |_| {
+                                    remove_gig.dispatch(RemoveGig { gig_id: id() });
+                                    use_navigate()("/gigs", Default::default());
+                                }
+                              >
+
+                                <i class="fa-solid fa-trash"></i>
+                              </button>
+                            </div>
                           }
-                        >
-
-                          <i class="fa-solid fa-trash"></i>
-                        </button>
-                      </div>
-                    }
-                        .into_view()
-                } else {
-                    view! { <div></div> }.into_view()
+                              .into_view()
+                      } else {
+                          view! { <div></div> }.into_view()
+                      }
+                  }}
                 }
-            }}
+            }
 
-          </div>
+          </Transition>
         </div>
-      </Transition>
+      </div>
 
       <Horizontal/>
 
@@ -223,113 +221,113 @@ pub fn Gig() -> impl IntoView {
       </div>
 
       <div class="mx-2">
-      <Transition fallback=move || {
-          view! { <p>"Loading..."</p> }
-      }>
-        <For
-          {move || gig_resource.track()}
-          each=move || {
-              gig_resource
-                  .get()
-                  .unwrap_or_else(|| Ok(Gig::default()))
-                  .unwrap_or_default()
-                  .songs
-                  .into_iter()
-                  .enumerate()
-          }
+        <Transition fallback=move || {
+            view! { <p>"Loading..."</p> }
+        }>
+          <For
+            {move || gig_resource.track()}
+            each=move || {
+                gig_resource
+                    .get()
+                    .unwrap_or_else(|| Ok(Gig::default()))
+                    .unwrap_or_default()
+                    .songs
+                    .into_iter()
+                    .enumerate()
+            }
 
-          key=|(_, state)| state.clone()
-          children=move |(index, _)| {
-              let song = create_memo(move |_| {
-                  gig_resource
-                      .and_then(|data| {
-                          let song = data.songs.get(index).unwrap().clone();
-                          SelectedSong {
-                              song: song.1.clone(),
-                              index: song.0,
-                              gig_id: data.id,
-                          }
-                      })
-                      .unwrap_or(Ok(SelectedSong::default()))
-                      .unwrap_or_default()
-              });
-              move || {
-                  view! { <SelectedGigSong selected_song=song.get() remove_song move_song/> }
-                      .into_view()
-              }
-          }
-        />
+            key=|(_, state)| state.clone()
+            children=move |(index, _)| {
+                let song = create_memo(move |_| {
+                    gig_resource
+                        .and_then(|data| {
+                            let song = data.songs.get(index).unwrap().clone();
+                            SelectedSong {
+                                song: song.1.clone(),
+                                index: song.0,
+                                gig_id: data.id,
+                            }
+                        })
+                        .unwrap_or(Ok(SelectedSong::default()))
+                        .unwrap_or_default()
+                });
+                move || {
+                    view! { <SelectedGigSong selected_song=song.get() remove_song move_song/> }
+                        .into_view()
+                }
+            }
+          />
 
-      </Transition>
+        </Transition>
       </div>
 
       <Horizontal/>
       <div class="flex justify-end mr-2 mt-4 mb-2">
-      <Transition>
-        {move || {
-            let gig_id = gig_resource
-                .get()
-                .unwrap_or_else(|| Ok(Gig::default()))
-                .unwrap_or_default()
-                .id;
-            view! {
-              <button
-                type="button"
-                class="border-0 rounded-full px-3 py-2 shadow-md bg-ctp-teal text-ctp-mantle"
-                on:click=move |_| {
-                    add_song
-                        .dispatch(AddSongToGig {
-                            gig_id,
-                            song_id: -1,
-                        })
-                }
-              >
+        <Transition>
+          {move || {
+              let gig_id = gig_resource
+                  .get()
+                  .unwrap_or_else(|| Ok(Gig::default()))
+                  .unwrap_or_default()
+                  .id;
+              view! {
+                <button
+                  type="button"
+                  class="border-0 rounded-full px-3 py-2 shadow-md bg-ctp-teal text-ctp-mantle"
+                  on:click=move |_| {
+                      add_song
+                          .dispatch(AddSongToGig {
+                              gig_id,
+                              song_id: -1,
+                          })
+                  }
+                >
 
-                <i class="fa-solid fa-pause"></i>
-                Pauze
-              </button>
-            }
-        }}
+                  <i class="fa-solid fa-pause"></i>
+                  Pauze
+                </button>
+              }
+          }}
 
         </Transition>
       </div>
 
       <div class="mx-2">
-      <Transition fallback=move || {
-          view! { <p>"Loading..."</p> }
-      }>
-        <For
-          {move || gig_resource.track()}
-          each=move || {
-              gig_resource
-                  .get()
-                  .unwrap_or_else(|| Ok(Gig::default()))
-                  .unwrap_or_default()
-                  .unselected_songs
-                  .into_iter()
-                  .enumerate()
-          }
+        <Transition fallback=move || {
+            view! { <p>"Loading..."</p> }
+        }>
+          <For
+            {move || gig_resource.track()}
+            each=move || {
+                gig_resource
+                    .get()
+                    .unwrap_or_else(|| Ok(Gig::default()))
+                    .unwrap_or_default()
+                    .unselected_songs
+                    .into_iter()
+                    .enumerate()
+            }
 
-          key=|(_, state)| state.clone()
-          children=move |(index, _)| {
-              let song = create_memo(move |_| {
-                  gig_resource
-                      .and_then(|data| {
-                          let song = data.unselected_songs.get(index).unwrap().clone();
-                          SelectedSong {
-                              song: models::gig::SongKind::Song(song.clone()),
-                              index: 1,
-                              gig_id: data.id,
-                          }
-                      })
-                      .unwrap_or(Ok(SelectedSong::default()))
-                      .unwrap_or_default()
-              });
-              move || view! { <UnSelectedGigSong selected_song=song.get() add_song/> }.into_view()
-          }
-        />
+            key=|(_, state)| state.clone()
+            children=move |(index, _)| {
+                let song = create_memo(move |_| {
+                    gig_resource
+                        .and_then(|data| {
+                            let song = data.unselected_songs.get(index).unwrap().clone();
+                            SelectedSong {
+                                song: models::gig::SongKind::Song(song.clone()),
+                                index: 1,
+                                gig_id: data.id,
+                            }
+                        })
+                        .unwrap_or(Ok(SelectedSong::default()))
+                        .unwrap_or_default()
+                });
+                move || view! { <UnSelectedGigSong selected_song=song.get() add_song/> }.into_view()
+            }
+          />
 
-      </Transition>
+        </Transition>
       </div>
     }
 }

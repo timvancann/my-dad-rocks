@@ -1,6 +1,7 @@
 # Get started with a build env with Rust nightly
 FROM rust:1.76.0-buster as builder
 
+ARG SQLX_OFFLINE=true
 RUN mkdir -p /app
 WORKDIR /app
 COPY . .

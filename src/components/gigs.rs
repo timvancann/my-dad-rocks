@@ -28,20 +28,18 @@ pub fn Gigs() -> impl IntoView {
           Nieuw optreden
         </button>
         <ol class="relative border-s border-gray-200 mx-2 mt-4">
-          <Suspense fallback=move || {
-              view! { <p>"Loading..."</p> }
-          }>
+          <Transition>
             {move || {
-                if let Some(Ok(gigs)) = gigs_resource.get() {
-                    gigs.into_iter()
-                        .map(move |gig| { view! { <Timeline gig/> }.into_view() })
-                        .collect_view()
-                } else {
-                    view! { <div>"Loading..."</div> }.into_view()
-                }
+                gigs_resource
+                    .get()
+                    .unwrap_or_else(|| Ok(vec![]))
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(move |gig| { view! { <Timeline gig/> }.into_view() })
+                    .collect_view()
             }}
 
-          </Suspense>
+          </Transition>
         </ol>
 
       </div>

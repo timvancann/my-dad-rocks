@@ -19,7 +19,7 @@ pub fn App() -> impl IntoView {
       <Title text="My Dad Rocks"/>
 
       // content for this welcome page
-      <div class="bg-ctp-base text-ctp-text">
+      <div class="min-h-screen bg-ctp-base text-ctp-text">
         <Router>
           <nav class="bg-ctp-surface0 shadow-md z-100">
             <div class="mx-auto max-w px-4 py-2">
