@@ -750,10 +750,6 @@ video {
   display: grid;
 }
 
-.hidden {
-  display: none;
-}
-
 .h-12 {
   height: 3rem;
 }
@@ -976,11 +972,6 @@ video {
 .bg-ctp-overlay2 {
   --tw-bg-opacity: 1;
   background-color: rgba(var(--ctp-overlay2), var(--tw-bg-opacity));
-}
-
-.bg-ctp-rosewater {
-  --tw-bg-opacity: 1;
-  background-color: rgba(var(--ctp-rosewater), var(--tw-bg-opacity));
 }
 
 .bg-ctp-surface0 {

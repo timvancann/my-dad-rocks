@@ -44,7 +44,7 @@ pub fn Player() -> impl IntoView {
 
     view! {
       <div class="flex flex-col items-center justify-center sticky top-0 z-10 mx-2">
-        <Suspense fallback=|| {
+        <Transition fallback=|| {
             view! { <div class="rounded-lg shadow-lg px-2 py-1">"Loading song"</div> }
         }>
           {move || {
@@ -63,7 +63,7 @@ pub fn Player() -> impl IntoView {
               }
           }}
 
-        </Suspense>
+        </Transition>
       </div>
     }
 }

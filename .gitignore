@@ -16,3 +16,5 @@ playwright/.cache/
 assets/mp3
 .DS_Store
 .env.prod
+rustc-ice-2024-02-08T11_59_21-30942.txt
+rustc-ice-2024-02-08T12_00_23-31014.txt
