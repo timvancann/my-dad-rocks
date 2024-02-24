@@ -1,5 +1,5 @@
 # Get started with a build env with Rust nightly
-FROM rustlang/rust:nightly-bullseye as builder
+FROM rust/1.74:bullseye as builder
 
 # If you’re using stable, use this instead
 # FROM rust:1.74-bullseye as builder
@@ -28,7 +28,7 @@ COPY . .
 # Build the app
 RUN cargo leptos build --release -vv
 
-FROM rustlang/rust:nightly-bullseye as runner
+FROM rust/1.74:bullseye as runner
 
 # -- NB: update binary name from "leptos_start" to match your app name in Cargo.toml --
 # Copy the server binary to the /app directory

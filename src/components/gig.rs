@@ -73,7 +73,7 @@ pub async fn remove_gig(gig_id: usize) -> Result<(), ServerFnError> {
 
 #[derive(Params, PartialEq)]
 struct GigParams {
-    id: usize,
+    id: Option<usize>,
 }
 
 #[component]
@@ -87,8 +87,14 @@ pub fn Gig() -> impl IntoView {
     provide_context(edit_mode);
 
     let params = use_params::<GigParams>();
-    let id =
-        move || params.with(|params| params.as_ref().map(|params| params.id).unwrap_or_default());
+    let id = move || {
+        params.with(|params| {
+            params
+                .as_ref()
+                .map(|params| params.id.unwrap_or_default())
+                .unwrap_or_default()
+        })
+    };
 
     let remove_song = create_server_action::<RemoveSongFromGig>();
     let add_song = create_server_action::<AddSongToGig>();
@@ -115,7 +121,7 @@ pub fn Gig() -> impl IntoView {
         |args| get_gig(args.3),
     );
 
-    let unselected_songs_resource = move || match gig_resource() {
+    let unselected_songs_resource = move || match gig_resource.get() {
         Some(res) => match res {
             Ok(gig) => Some(Ok((gig.id, gig.unselected_songs))),
             Err(e) => Some(Err(e)),
@@ -123,7 +129,7 @@ pub fn Gig() -> impl IntoView {
         None => None,
     };
 
-    let edit_mode_active_class = move || match edit_mode() {
+    let edit_mode_active_class = move || match edit_mode.get() {
         true => "border-2 rounded-full px-3 py-2 shadow-lg  border-ctp-yellow text-ctp-text",
         false => "border-0 rounded-full px-3 py-2 shadow-lg bg-ctp-yellow text-ctp-mantle",
     };
@@ -133,7 +139,7 @@ pub fn Gig() -> impl IntoView {
       <Suspense fallback=move || view! { <p>"Loading..."</p> }>
         <div class="flex flex-col mt-2">
           <div class="flex gap-2 mx-2">
-            {if let Some(Ok(gig)) = gig_resource() {
+            {if let Some(Ok(gig)) = gig_resource.get() {
                 view! {
                   <InputWithLabel
                     label="Venue".to_string()
@@ -161,7 +167,7 @@ pub fn Gig() -> impl IntoView {
 
                   <InputWithLabel
                     label="Datum".to_string()
-                    value=if let Some(Ok(gig)) = gig_resource() {
+                    value=if let Some(Ok(gig)) = gig_resource.get() {
                         gig.date.to_string()
                     } else {
                         "".to_string()
@@ -181,7 +187,7 @@ pub fn Gig() -> impl IntoView {
                 view! { <div></div> }.into_view()
             }}
             {move || {
-                if edit_mode() {
+                if edit_mode.get() {
                     view! {
                       <div class="self-end">
                         <button
@@ -215,7 +221,7 @@ pub fn Gig() -> impl IntoView {
           <button
             type="button"
             class=move || edit_mode_active_class()
-            on:click=move |_| { edit_mode.set(!edit_mode()) }
+            on:click=move |_| { edit_mode.set(!edit_mode.get()) }
           >
 
             <i class="fa-solid fa-edit"></i>
@@ -227,7 +233,7 @@ pub fn Gig() -> impl IntoView {
             view! { <ErrorTemplate errors=errors/> }
         }>
           {move || {
-              gig_resource()
+              gig_resource.get()
                   .map(move |gig| match gig {
                       Err(e) => {
                           view! { <pre class="error">"Server Error: " {e.to_string()}</pre> }
@@ -374,7 +380,8 @@ pub fn SelectedGigSong(
         let edit_mode = use_context::<RwSignal<bool>>().unwrap();
         let set_song_id = use_context::<WriteSignal<Option<i32>>>()
             .expect("Expected to have a set_played signal provided");
-        move || match edit_mode() {
+        move || {
+            match edit_mode.get() {
             true => view! {
               <button
                 type="button"
@@ -382,8 +389,8 @@ pub fn SelectedGigSong(
                 on:click=move |_| {
                     remove_song
                         .dispatch(RemoveSongFromGig {
-                            gig_id: gig_id,
-                            song_id: song_id,
+                            gig_id,
+                            song_id,
                         })
                 }
               >
@@ -396,8 +403,8 @@ pub fn SelectedGigSong(
                 on:click=move |_| {
                     move_song
                         .dispatch(MoveSongInGig {
-                            gig_id: gig_id,
-                            song_id: song_id,
+                             gig_id,
+                             song_id,
                             kind: MoveKind::Up,
                         })
                 }
@@ -411,8 +418,8 @@ pub fn SelectedGigSong(
                 on:click=move |_| {
                     move_song
                         .dispatch(MoveSongInGig {
-                            gig_id: gig_id,
-                            song_id: song_id,
+                            gig_id,
+                            song_id,
                             kind: MoveKind::Down,
                         })
                 }
@@ -443,6 +450,7 @@ pub fn SelectedGigSong(
                     .into_view()
                 }
             }
+        }
         }
     }
 

@@ -123,7 +123,7 @@ impl Song {
     #[cfg(feature = "ssr")]
     fn get_picture_as_base64(audio_path: String) -> String {
         use base64::{engine::general_purpose::STANDARD, Engine as _};
-        use id3::{Tag, TagLike};
+        use id3::Tag;
         let file_path = format!("./assets/{}", audio_path);
 
         if let Ok(tag) = Tag::read_from_path(file_path) {

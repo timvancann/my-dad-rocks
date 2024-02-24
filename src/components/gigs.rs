@@ -32,7 +32,7 @@ pub fn Gigs() -> impl IntoView {
               view! { <p>"Loading..."</p> }
           }>
             {move || {
-                if let Some(Ok(gigs)) = gigs_resource() {
+                if let Some(Ok(gigs)) = gigs_resource.get() {
                     gigs.into_iter()
                         .map(move |gig| { view! { <Timeline gig/> }.into_view() })
                         .collect_view()

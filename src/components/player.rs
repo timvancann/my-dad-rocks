@@ -1,5 +1,5 @@
 use base64::prelude::*;
-use base64::{engine::general_purpose::STANDARD, Engine as _};
+use base64::engine::general_purpose::STANDARD;
 use leptos::*;
 use serde::{Deserialize, Serialize};
 
@@ -26,7 +26,7 @@ pub async fn get_mp3(song_id: Option<i32>) -> Result<Option<AudioFile>, ServerFn
         Some(id) => {
             let song = Song::get(id).await?;
             let mp3 = read_mp3_from_disk(&song.audio_file_path)?;
-            Ok(Some(AudioFile { mp3, song }))
+            Ok(Some(AudioFile { mp3, song }) )
         }
         None => Ok(None)
     }

@@ -5,7 +5,7 @@ use crate::models::song::Song;
 
 #[derive(Params, PartialEq)]
 struct LyricParams {
-    id: usize,
+    id: Option<usize>,
 }
 
 #[server(GetSong)]
@@ -20,8 +20,14 @@ pub fn SongText() -> impl IntoView {
     let edit_mode = create_rw_signal(false);
     provide_context(edit_mode);
 
-    let id =
-        move || params.with(|params| params.as_ref().map(|params| params.id).unwrap_or_default());
+    let id = move || {
+        params.with(|params| {
+            params
+                .as_ref()
+                .map(|params| params.id.unwrap_or_default())
+                .unwrap_or_default()
+        })
+    };
 
     let update_lyrics = create_server_action::<UpdateLyrics>();
     let song_resource = create_resource(move || id(), |args| get_song(args));
@@ -42,7 +48,7 @@ pub fn SongText() -> impl IntoView {
                         <EditButton song_resource/>
                       </div>
                     </div>
-                    {move || match edit_mode() {
+                    {move || match edit_mode.get() {
                         true => view! { <EditLyric song=song.clone() update_lyrics/> }.into_view(),
                         false => view! { <ViewLyric song=song.clone()/> }.into_view(),
                     }}
@@ -63,7 +69,7 @@ fn EditButton(song_resource: Resource<usize, Result<Song, ServerFnError>>) -> im
     let edit_mode =
         use_context::<RwSignal<bool>>().expect("EditButton must be used within a context");
 
-    let edit_mode_active_class = move || match edit_mode() {
+    let edit_mode_active_class = move || match edit_mode.get() {
         true => "rounded-full border-2 p-3",
         false => "rounded-full border-2 p-3 bg-ctp-mauve text-ctp-crust",
     };
@@ -73,8 +79,8 @@ fn EditButton(song_resource: Resource<usize, Result<Song, ServerFnError>>) -> im
         type="button"
         class=move || edit_mode_active_class()
         on:click=move |_| {
-            edit_mode.set(!edit_mode());
-            if !edit_mode() {
+            edit_mode.set(!edit_mode.get());
+            if !edit_mode.get() {
                 song_resource.refetch()
             }
         }
