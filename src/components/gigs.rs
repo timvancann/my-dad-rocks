@@ -2,7 +2,7 @@ use leptos::*;
 
 use crate::models::gig::{Gig, GigModel};
 
-#[server(GetGigs)]
+#[server(GetGigs, "/api", "GetJson")]
 pub async fn get_gigs() -> Result<Vec<GigModel>, ServerFnError> {
     Gig::get_all().await.map_err(ServerFnError::from)
 }

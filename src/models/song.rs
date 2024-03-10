@@ -52,7 +52,7 @@ impl Song {
             title: row.title,
             last_played_at: row.last_played_at,
             audio_file_path: row.audio_file_path.clone(),
-            album_art: Song::get_picture_as_base64(row.audio_file_path),
+            album_art: Song::get_picture_as_base64(row.audio_file_path, ThumbnailType::Thumbnail),
             should_play: song_in_setlist,
             lyrics: row.lyrics,
         })
@@ -75,7 +75,7 @@ impl Song {
             title: row.title,
             last_played_at: row.last_played_at,
             audio_file_path: row.audio_file_path.clone(),
-            album_art: Song::get_picture_as_base64(row.audio_file_path),
+            album_art: Song::get_picture_as_base64(row.audio_file_path, ThumbnailType::Thumbnail),
             should_play: setlist_songs.contains(&row.id),
             lyrics: row.lyrics,
         })
@@ -101,7 +101,7 @@ impl Song {
             title: row.title,
             last_played_at: row.last_played_at,
             audio_file_path: row.audio_file_path.clone(),
-            album_art: Song::get_picture_as_base64(row.audio_file_path),
+            album_art: Song::get_picture_as_base64(row.audio_file_path, ThumbnailType::Thumbnail),
             should_play: setlist_songs.contains(&row.id),
             lyrics: row.lyrics,
         })
@@ -121,18 +121,26 @@ impl Song {
     }
 
     #[cfg(feature = "ssr")]
-    fn get_picture_as_base64(audio_path: String) -> String {
+    pub fn get_picture_as_base64(audio_path: String, thumbnail_type: ThumbnailType) -> String {
         use base64::{engine::general_purpose::STANDARD, Engine as _};
-        use id3::Tag;
-        let file_path = format!("./assets/{}", audio_path);
+        use image::{io::Reader as ImageReader, ImageOutputFormat};
+        use std::{path::PathBuf, io::Cursor};
 
-        if let Ok(tag) = Tag::read_from_path(file_path) {
-            if let Some(pic) = tag.pictures().next() {
-                return STANDARD.encode(&pic.data);
-            }
+        let dir = match thumbnail_type {
+            ThumbnailType::Thumbnail => "thumbnails",
+            ThumbnailType::Player => "player",
         };
 
-        return "".to_string();
+        let file_path = PathBuf::from(format!("./assets/{}/{}", dir, audio_path));
+        let img_path = file_path.with_extension("png");
+
+        println!("reading image from {:?}", img_path);
+
+        let img = ImageReader::open(img_path).unwrap().decode().unwrap();
+        let mut image_data: Vec<u8> = Vec::new();
+        img.write_to(&mut Cursor::new(&mut image_data), ImageOutputFormat::Png)
+            .unwrap();
+        STANDARD.encode(image_data)
     }
 
     #[cfg(feature = "ssr")]
@@ -142,4 +150,9 @@ impl Song {
             .await
             .map(|_| ())
     }
+}
+
+pub enum ThumbnailType {
+    Thumbnail,
+    Player,
 }

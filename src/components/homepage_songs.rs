@@ -38,7 +38,7 @@ pub async fn fill_setlist(max_n: i32) -> Result<()> {
         .map_err(ServerFnError::from)
 }
 
-#[server(GetSongs)]
+#[server(GetSongs, "/api", "GetJson")]
 pub async fn get_songs() -> Result<Vec<Song>> {
     match Song::get_all().await {
         Ok(s) => Ok(s),
@@ -46,15 +46,7 @@ pub async fn get_songs() -> Result<Vec<Song>> {
     }
 }
 
-#[server(GetSong)]
-pub async fn get_song(id: i32) -> Result<Song> {
-    match Song::get(id).await {
-        Ok(s) => Ok(s),
-        Err(e) => Err(ServerFnError::from(e)),
-    }
-}
-
-#[server(CleanSetlist)]
+#[server(CleanSetlist, "/api", "GetJson")]
 pub async fn clean_setlist() -> Result<()> {
     Setlist::clean().await.map_err(ServerFnError::from)
 }

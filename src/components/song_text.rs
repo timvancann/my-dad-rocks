@@ -8,7 +8,7 @@ struct LyricParams {
     id: Option<usize>,
 }
 
-#[server(GetSong)]
+#[server(GetSong, "/api", "GetJson")]
 pub async fn get_song(id: usize) -> Result<Song, ServerFnError> {
     Song::get(id as i32).await.map_err(ServerFnError::from)
 }
@@ -30,7 +30,7 @@ pub fn SongText() -> impl IntoView {
     };
 
     let update_lyrics = create_server_action::<UpdateLyrics>();
-    let song_resource = create_resource(move || id(), |args| get_song(args));
+    let song_resource = create_resource(id, get_song);
 
     view! {
       <div class="m-2">
@@ -103,7 +103,7 @@ fn EditLyric(
     song: Song,
     update_lyrics: Action<UpdateLyrics, Result<(), ServerFnError>>,
 ) -> impl IntoView {
-    let (lyrics, set_lyrics) = create_signal(song.lyrics);
+    let (lyrics, _) = create_signal(song.lyrics);
 
     view! {
       <div class="mt-2">

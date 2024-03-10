@@ -9,7 +9,7 @@ use crate::{
     models::gig::{Gig, MoveKind, SongKind},
 };
 
-#[server(GetGig)]
+#[server(GetGig, "/api", "GetJson")]
 pub async fn get_gig(gig_id: Option<i32>) -> Result<Gig, ServerFnError> {
     match gig_id {
         Some(id) => Ok(Gig::get_by_id(id).await?),
@@ -128,6 +128,7 @@ pub fn Gig() -> impl IntoView {
       <div class="flex flex-col mt-2">
         <div class="flex gap-2 mx-2">
           <Transition>
+
             {
                 let gig = gig_resource
                     .get()

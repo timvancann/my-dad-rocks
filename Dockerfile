@@ -8,9 +8,10 @@ COPY . .
 
 RUN apt-get update && apt-get install --reinstall libasound2-dev -y 
 
-RUN rustup target add wasm32-unknown-unknown
-RUN cargo install cargo-leptos
-RUN cargo leptos build --release -vv
+RUN rustup target add wasm32-unknown-unknown && \
+    cargo install -f wasm-bindgen-cli --version 0.2.92 && \
+    cargo install cargo-leptos && \
+    cargo leptos build --release -vv
 
 FROM rust:1.76.0-buster as runner
 
