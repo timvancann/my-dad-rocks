@@ -37,6 +37,11 @@
         "ordinal": 6,
         "name": "lyrics",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "gs_url",
+        "type_info": "Varchar"
       }
     ],
     "parameters": {
@@ -49,7 +54,8 @@
       true,
       false,
       false,
-      false
+      false,
+      true
     ]
   },
   "hash": "22f931c4f74a52f76c7e67489b7c08b93cfb2490b3f3621944fbb0cef0fa09ec"
