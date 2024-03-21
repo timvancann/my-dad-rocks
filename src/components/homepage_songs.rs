@@ -8,9 +8,7 @@ use crate::models::song::Song;
 type Result<T> = std::result::Result<T, ServerFnError>;
 
 #[cfg(feature = "ssr")]
-pub async fn find_unpracticed_unselected_random_song(
-    already_selected: &[Song],
-) -> Result<Song> {
+pub async fn find_unpracticed_unselected_random_song(already_selected: &[Song]) -> Result<Song> {
     use super::random_selection::get_random_song;
 
     while let Ok(song) = get_random_song().await {
@@ -69,23 +67,35 @@ pub async fn pick_song(song_id: i32) -> Result<()> {
 
 #[component]
 pub fn Songs() -> impl IntoView {
-        let empty_setlist = create_server_action::<CleanSetlist>();
-        let fill = create_server_action::<FillSetlist>();
-    
-        let set_song_played = create_server_action::<SetSongPlayed>();
-        let pick_song = create_server_action::<HandPickSong>();
-    
-        let songs_resource = create_resource(
-            move || {
-                (
-                    set_song_played.version().get(),
-                    pick_song.version().get(),
-                    empty_setlist.version().get(),
-                    fill.version().get(),
-                )
-            },
-            |_| get_songs(),
-        );
+    let empty_setlist = create_server_action::<CleanSetlist>();
+    let fill = create_server_action::<FillSetlist>();
+
+    let set_song_played = create_server_action::<SetSongPlayed>();
+    let pick_song = create_server_action::<HandPickSong>();
+
+    let songs_resource = create_resource(
+        move || {
+            (
+                set_song_played.version().get(),
+                pick_song.version().get(),
+                empty_setlist.version().get(),
+                fill.version().get(),
+            )
+        },
+        |_| get_songs(),
+    );
+    let set_setlist = use_context::<WriteSignal<Vec<i32>>>()
+        .expect("Expected to have a set_played signal provided");
+    set_setlist.update(|s| {
+        *s = songs_resource
+            .get()
+            .unwrap_or_else(|| Ok(vec![]))
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|s| s.should_play)
+            .map(|s| s.id)
+            .collect()
+    });
 
     view! {
       <div class="flex justify-between m-3 items-center">

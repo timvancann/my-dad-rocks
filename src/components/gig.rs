@@ -75,13 +75,16 @@ struct GigParams {
 
 #[component]
 pub fn Gig() -> impl IntoView {
-    let edit_mode = create_rw_signal(false);
     let (get_song_id, set_song_id) = create_signal(None::<i32>);
-
     provide_context(set_song_id);
     provide_context(get_song_id);
 
+    let edit_mode = create_rw_signal(false);
     provide_context(edit_mode);
+
+    let (get_setlist, set_setlist) = create_signal(Vec::<i32>::new());
+    provide_context(get_setlist);
+    provide_context(set_setlist);
 
     let params = use_params::<GigParams>();
     let id = move || {
@@ -101,11 +104,6 @@ pub fn Gig() -> impl IntoView {
     let set_gig_date = create_server_action::<SetGigDate>();
     let remove_gig = create_server_action::<RemoveGig>();
 
-    let (get_song_id, set_song_id) = create_signal(None::<i32>);
-
-    provide_context(set_song_id);
-    provide_context(get_song_id);
-
     let gig_resource = create_resource(
         move || {
             (
@@ -122,6 +120,22 @@ pub fn Gig() -> impl IntoView {
         true => "border-2 rounded-full px-3 py-2 shadow-lg  border-ctp-yellow text-ctp-text",
         false => "border-0 rounded-full px-3 py-2 shadow-lg bg-ctp-yellow text-ctp-mantle",
     };
+
+    set_setlist.update(|s| {
+        *s = gig_resource
+            .get()
+            .unwrap_or_else(|| Ok(Gig::default()))
+            .unwrap_or_default()
+            .songs
+            .into_iter()
+            .map(|s| s.1)
+            .filter_map(|s| match s {
+                SongKind::Song(s) => Some(s),
+                _ => None,
+            })
+            .map(|s| s.id)
+            .collect()
+    });
 
     view! {
       <Player/>
@@ -465,7 +479,7 @@ pub fn UnSelectedGigSong(
     selected_song: SelectedSong,
     add_song: Act<AddSongToGig>,
 ) -> impl IntoView {
-    let song = match selected_song.song{
+    let song = match selected_song.song {
         SongKind::Song(s) => s,
         _ => return view! { <div></div> },
     };
