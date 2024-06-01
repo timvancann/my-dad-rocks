@@ -121,21 +121,21 @@ pub fn Gig() -> impl IntoView {
         false => "border-0 rounded-full px-3 py-2 shadow-lg bg-ctp-yellow text-ctp-mantle",
     };
 
-    set_setlist.update(|s| {
-        *s = gig_resource
-            .get()
-            .unwrap_or_else(|| Ok(Gig::default()))
-            .unwrap_or_default()
-            .songs
-            .into_iter()
-            .map(|s| s.1)
-            .filter_map(|s| match s {
-                SongKind::Song(s) => Some(s),
-                _ => None,
-            })
-            .map(|s| s.id)
-            .collect()
-    });
+    // set_setlist.update(|s| {
+    //     *s = gig_resource
+    //         .get()
+    //         .unwrap_or_else(|| Ok(Gig::default()))
+    //         .unwrap_or_default()
+    //         .songs
+    //         .into_iter()
+    //         .map(|s| s.1)
+    //         .filter_map(|s| match s {
+    //             SongKind::Song(s) => Some(s),
+    //             _ => None,
+    //         })
+    //         .map(|s| s.id)
+    //         .collect()
+    // });
 
     view! {
       <Player/>

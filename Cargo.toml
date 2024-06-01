@@ -13,37 +13,42 @@ cfg-if = "1"
 chrono = { version = "0.4.34", features = ["serde"] }
 console_error_panic_hook = "0.1"
 console_log = "1"
-dotenv = {"version"= "0.15.0", optional = true}
+dotenv = { "version" = "0.15.0", optional = true }
 futures = "0.3.30"
 http = "1.0.0"
-id3 = {version = "1.13.0", optional = true}
-image = {version = "0.24.9", optional = true}
-leptos = { version = "0.6.6"}
+id3 = { version = "1.13.0", optional = true }
+image = { version = "0.24.9", optional = true }
+leptos = { version = "0.6.9" }
 leptos_axum = { version = "0.6.9", optional = true }
-leptos_meta = { version = "0.6.9"}
-leptos_router = { version = "0.6.9"}
+leptos_meta = { version = "0.6.9" }
+leptos_router = { version = "0.6.9" }
 log = "0.4"
-once_cell = {version = "1.19.0", optional = true}
-rand = {version= "0.8.5", optional = true}
+once_cell = { version = "1.19.0", optional = true }
+rand = { version = "0.8.5", optional = true }
 rodio = { version = "0.17.1", features = ["symphonia-aac", "symphonia-isomp4"], optional = true }
-serde = {version = "1.0.197", features = ["derive"]}
+serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.114"
 simple_logger = "4"
 sqlx = { version = "0.7.3", features = ["runtime-async-std", "postgres", "chrono", "migrate"], optional = true }
 thiserror = "1.0.57"
-tokio = { version = "1.25.0", optional = true, features=["rt-multi-thread"]}
-tokio-util = {version="0.7.10", optional = true}
+tokio = { version = "1.38.0", optional = true, features = ["rt-multi-thread"] }
+tokio-util = { version = "0.7.10", optional = true }
 tower = { version = "0.4.13", optional = true }
 tower-http = { version = "0.5", features = ["fs", "cors"], optional = true }
 tracing = { version = "0.1.37", optional = true }
-url = {version = "2.5.0", optional = true}
+url = { version = "2.5.0", optional = true }
 wasm-bindgen = "0.2.92"
 
 
 
 [features]
 default = ["ssr", "hydrate"]
-hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
+hydrate = [
+    "leptos/hydrate",
+    "leptos_meta/hydrate",
+    "leptos_router/hydrate",
+]
+
 ssr = [
     "dep:axum",
     "dep:dotenv",

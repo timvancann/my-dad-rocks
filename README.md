@@ -10,22 +10,26 @@ npm install -D tailwindcss prettier prettier-plugin-tailwindcss @tailwindcss/typ
 ### Running the project in development mode
 
 Run and prepare the database
+
 ```bash
 docker-compose up db -d
-sqlx mirgrate run
+sqlx migrate run
 ```
 
 Compile tailwindcss and watch for changes
+
 ```bash
-npx tailwindcss -i ./input.css -o ./style/output.css --watch
+npx tailwindcss -i ./input.css -o ./style/tailwind.css --watch
 ```
 
 Run the server and watch for changes
+
 ```bash
-DATABASE_URL=postgres://postgrse:tits@localhost:5432/mydadrocks cargo leptos watch
+DATABASE_URL=postgres://postgres:tits@localhost:5432/mydadrocks cargo leptos watch
 ```
 
 ## Building the project (make sure the database is running)
+
 ```bash
 cargo sqlx prepare
 docker-compose build

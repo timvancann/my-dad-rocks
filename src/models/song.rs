@@ -6,10 +6,9 @@ pub struct Song {
     pub id: i32,
     pub artist: String,
     pub title: String,
+    pub sanitized_title: String,
     pub last_played_at: Option<NaiveDate>,
-    pub audio_file_path: String,
     pub gs_url: Option<String>,
-    pub album_art: String,
     pub should_play: bool,
     pub lyrics: String,
 }
@@ -22,8 +21,7 @@ impl Default for Song {
             title: "".to_string(),
             last_played_at: None,
             gs_url: None,
-            audio_file_path: "".to_string(),
-            album_art: "".to_string(),
+            sanitized_title: "".to_string(),
             should_play: false,
             lyrics: "".to_string(),
         }
@@ -53,9 +51,8 @@ impl Song {
             artist: row.artist,
             title: row.title,
             last_played_at: row.last_played_at,
-            audio_file_path: row.audio_file_path.clone(),
+            sanitized_title: row.sanitized_title.clone(),
             gs_url: row.gs_url,
-            album_art: Song::get_picture_as_base64(row.audio_file_path, ThumbnailType::Thumbnail),
             should_play: song_in_setlist,
             lyrics: row.lyrics,
         })
@@ -78,8 +75,7 @@ impl Song {
             title: row.title,
             last_played_at: row.last_played_at,
             gs_url: row.gs_url,
-            audio_file_path: row.audio_file_path.clone(),
-            album_art: Song::get_picture_as_base64(row.audio_file_path, ThumbnailType::Thumbnail),
+            sanitized_title: row.sanitized_title.clone(),
             should_play: setlist_songs.contains(&row.id),
             lyrics: row.lyrics,
         })
@@ -105,8 +101,7 @@ impl Song {
             title: row.title,
             gs_url: row.gs_url,
             last_played_at: row.last_played_at,
-            audio_file_path: row.audio_file_path.clone(),
-            album_art: Song::get_picture_as_base64(row.audio_file_path, ThumbnailType::Thumbnail),
+            sanitized_title: row.sanitized_title.clone(),
             should_play: setlist_songs.contains(&row.id),
             lyrics: row.lyrics,
         })
@@ -123,29 +118,6 @@ impl Song {
         .execute(crate::database::get_db())
         .await
         .map(|_| ())
-    }
-
-    #[cfg(feature = "ssr")]
-    pub fn get_picture_as_base64(audio_path: String, thumbnail_type: ThumbnailType) -> String {
-        use base64::{engine::general_purpose::STANDARD, Engine as _};
-        use image::{io::Reader as ImageReader, ImageOutputFormat};
-        use std::{path::PathBuf, io::Cursor};
-
-        let dir = match thumbnail_type {
-            ThumbnailType::Thumbnail => "thumbnails",
-            ThumbnailType::Player => "player",
-        };
-
-        let file_path = PathBuf::from(format!("./assets/{}/{}", dir, audio_path));
-        let img_path = file_path.with_extension("png");
-
-        println!("reading image from {:?}", img_path);
-
-        let img = ImageReader::open(img_path).unwrap().decode().unwrap();
-        let mut image_data: Vec<u8> = Vec::new();
-        img.write_to(&mut Cursor::new(&mut image_data), ImageOutputFormat::Png)
-            .unwrap();
-        STANDARD.encode(image_data)
     }
 
     #[cfg(feature = "ssr")]

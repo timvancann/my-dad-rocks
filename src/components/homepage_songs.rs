@@ -84,18 +84,18 @@ pub fn Songs() -> impl IntoView {
         },
         |_| get_songs(),
     );
-    let set_setlist = use_context::<WriteSignal<Vec<i32>>>()
-        .expect("Expected to have a set_played signal provided");
-    set_setlist.update(|s| {
-        *s = songs_resource
-            .get()
-            .unwrap_or_else(|| Ok(vec![]))
-            .unwrap_or_default()
-            .into_iter()
-            .filter(|s| s.should_play)
-            .map(|s| s.id)
-            .collect()
-    });
+    // let set_setlist = use_context::<WriteSignal<Vec<i32>>>()
+    //     .expect("Expected to have a set_played signal provided");
+    // set_setlist.update(move |s| {
+    //     *s = songs_resource
+    //         .get()
+    //         .unwrap_or_else(|| Ok(vec![]))
+    //         .unwrap_or_default()
+    //         .into_iter()
+    //         .filter(|s| s.should_play)
+    //         .map(|s| s.id)
+    //         .collect()
+    // });
 
     view! {
       <div class="flex justify-between m-3 items-center">

@@ -1,22 +1,7 @@
-use leptos::html::Audio;
-use leptos::leptos_dom::HydrationKey;
 use leptos::*;
 
-use crate::components::albumart::AlbumArt;
-use crate::models::song::{Song, ThumbnailType};
-
-#[server(GetPlayerThumbnail, "/api", "GetJson")]
-pub async fn get_player_thumbnail(song_id: Option<i32>) -> Result<Option<String>, ServerFnError> {
-    match song_id {
-        Some(id) => {
-            let song = Song::get(id).await?;
-            let thumbnail =
-                Song::get_picture_as_base64(song.audio_file_path, ThumbnailType::Player);
-            Ok(Some(thumbnail))
-        }
-        None => Ok(None),
-    }
-}
+use crate::components::shared::AlbumArt;
+use crate::models::song::Song;
 
 #[server(GetSong, "/api", "GetJson")]
 pub async fn get_song(song_id: Option<i32>) -> Result<Option<Song>, ServerFnError> {
@@ -32,7 +17,6 @@ pub fn Player() -> impl IntoView {
         use_context::<ReadSignal<Option<i32>>>().expect("get_song_id context expected");
 
     let song_resource = create_resource(move || get_song_id.get(), get_song);
-    let thumbnail_resource = create_resource(move || get_song_id.get(), get_player_thumbnail);
 
     view! {
       <div class="flex flex-col items-center justify-center sticky top-0 z-10 mx-2">
@@ -40,11 +24,11 @@ pub fn Player() -> impl IntoView {
             view! { <div class="rounded-lg shadow-lg px-2 py-1">"Loading song"</div> }
         }>
           {move || {
-              match (song_resource.get(), thumbnail_resource.get()) {
-                  (Some(Ok(Some(song))), Some(Ok(Some(thumbnail)))) => {
+              match song_resource.get() {
+                  Some(Ok(Some(song))) => {
                       view! {
                         <div class="flex-1 flex-col w-full rounded-md shadow-lg pb-2 bg-ctp-surface1 mt-1 p-1">
-                          <SelectedSongView song=song.clone() thumbnail/>
+                          <SelectedSongView song=song.clone()/>
                           <AudioPlayer id=song.id source=song.gs_url/>
                         </div>
                       }
@@ -60,11 +44,11 @@ pub fn Player() -> impl IntoView {
 }
 
 #[component]
-fn SelectedSongView(song: Song, thumbnail: String) -> impl IntoView {
+fn SelectedSongView(song: Song) -> impl IntoView {
     view! {
       <div class="flex grow">
         <figure class="flex w-20 h-20 mr-4">
-          <AlbumArt base64_encoded_string=thumbnail/>
+          <AlbumArt title=song.sanitized_title.clone() width=80 height=80/>
         </figure>
         <div class="flex-1 flex-cols">
           <div class="text-lg font-bold">{song.title}</div>
@@ -76,28 +60,28 @@ fn SelectedSongView(song: Song, thumbnail: String) -> impl IntoView {
 
 #[component]
 fn AudioPlayer(id: i32, source: Option<String>) -> impl IntoView {
-    let set_song_id =
-        use_context::<WriteSignal<Option<i32>>>().expect("set_song_id context expected");
+    // let set_song_id =
+    //     use_context::<WriteSignal<Option<i32>>>().expect("set_song_id context expected");
 
-    let get_setlist = use_context::<ReadSignal<Vec<i32>>>().expect("get_setlist context expected");
-
-    let next_id = if let Some(current_index) = get_setlist.get().iter().position(|&x| x == id) {
-        *get_setlist
-            .get()
-            .iter()
-            .cycle()
-            .nth(current_index + 1)
-            .unwrap()
-    } else {
-        id
-    };
+    // let get_setlist = use_context::<ReadSignal<Vec<i32>>>().expect("get_setlist context expected");
+    //
+    // let next_id = if let Some(current_index) = get_setlist.get().iter().position(|&x| x == id) {
+    //     *get_setlist
+    //         .get()
+    //         .iter()
+    //         .cycle()
+    //         .nth(current_index + 1)
+    //         .unwrap()
+    // } else {
+    //     id
+    // };
 
     view! {
       <div class="flex mt-1">
         {if let Some(source) = source {
             view! {
               <audio class="grow" controls autoplay
-                on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+                // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
                   >
                 <source src=source/>
               </audio>

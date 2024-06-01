@@ -25,7 +25,7 @@
       },
       {
         "ordinal": 4,
-        "name": "audio_file_path",
+        "name": "sanitized_title",
         "type_info": "Varchar"
       },
       {

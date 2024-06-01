@@ -1,14 +1,12 @@
 #[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
-    use axum::routing::get;
     use axum::Router;
     use leptos::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
     use my_dad_rocks::app::*;
     use my_dad_rocks::database::init_db;
     use my_dad_rocks::fileserv::file_and_error_handler;
-    use my_dad_rocks::routes::serve_mp3;
     use tower_http::cors::{Any, CorsLayer};
 
     let _ = init_db().await;
@@ -26,12 +24,11 @@ async fn main() {
 
     let app = Router::new()
         .leptos_routes(&leptos_options, routes, App)
-        .route("/audio/:id", get(serve_mp3))
         .fallback(file_and_error_handler)
         .layer(cors)
         .with_state(leptos_options);
 
-    log::info!("listening on http://{}", &addr);
+    log::info!("listening on https://{}", &addr);
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     axum::serve(listener, app.into_make_service())
         .await

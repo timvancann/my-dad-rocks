@@ -2,9 +2,10 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
+use crate::components::{gig::Gig, home::HomePage};
 use crate::components::gigs::Gigs;
 use crate::components::song_text::SongText;
-use crate::components::{gig::Gig, home::HomePage};
+use crate::error_template::{AppError, ErrorTemplate};
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -20,13 +21,17 @@ pub fn App() -> impl IntoView {
 
       // content for this welcome page
       <div class="min-h-screen bg-ctp-base text-ctp-text">
-        <Router>
-          <nav class="bg-ctp-surface0 shadow-md z-100">
+        <Router fallback=|| {
+            let mut outside_errors = Errors::default();
+            outside_errors.insert_with_default_key(AppError::NotFound);
+            view! { <ErrorTemplate outside_errors/> }.into_view()
+        }>
+      <nav class="bg-ctp-surface0 shadow-md z-100">
             <div class="mx-auto max-w px-4 py-2">
               <div class="flex flex-1 items-center justify-center items-stretch justify-start">
                 <div class="flex flex-1 items-center">
                   <a href="/" class="text-ctp-text rounded-md text-2xl font-bold">
-                    MDR
+                    <img src="/android-chrome-192x192.png" width=60 height=60/>
                   </a>
                 </div>
                 <div class="ml-6 block items-center">

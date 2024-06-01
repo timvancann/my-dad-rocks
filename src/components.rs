@@ -1,4 +1,3 @@
-pub mod albumart;
 pub mod gig;
 pub mod gigs;
 pub mod home;
