@@ -11,7 +11,5 @@ pub fn AlbumArt(title: String, width: u32, height: u32) -> impl IntoView {
     art.push_str(".png");
     let path = format!("/album_art/{}", art);
 
-    view! {
-      <img src=path width=width height=height/>
-    }
+    view! { <img src=path width=width height=height/> }
 }

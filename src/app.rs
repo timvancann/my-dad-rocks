@@ -26,7 +26,7 @@ pub fn App() -> impl IntoView {
             outside_errors.insert_with_default_key(AppError::NotFound);
             view! { <ErrorTemplate outside_errors/> }.into_view()
         }>
-      <nav class="bg-ctp-surface0 shadow-md z-100">
+          <nav class="bg-ctp-surface0 shadow-md z-100">
             <div class="mx-auto max-w px-4 py-2">
               <div class="flex flex-1 items-center justify-center items-stretch justify-start">
                 <div class="flex flex-1 items-center">

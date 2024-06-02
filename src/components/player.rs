@@ -80,15 +80,46 @@ fn AudioPlayer(id: i32, source: Option<String>) -> impl IntoView {
       <div class="flex mt-1">
         {if let Some(source) = source {
             view! {
-              <audio class="grow" controls autoplay
+              <audio class="grow" controls autoplay>
                 // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
-                  >
                 <source src=source/>
               </audio>
             }
                 .into_view()
         } else {
-            view! { <div class="rounded-lg shadow-lg px-2 py-1">"No audio file available"</div> }
+            view! {
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              <div class="rounded-lg shadow-lg px-2 py-1">"No audio file available"</div>
+            }
                 .into_view()
         }}
 

@@ -84,6 +84,7 @@ pub fn Songs() -> impl IntoView {
         },
         |_| get_songs(),
     );
+    let (get_selected_song, set_selected_song) = create_signal::<Option<i32>>(None);
     // let set_setlist = use_context::<WriteSignal<Vec<i32>>>()
     //     .expect("Expected to have a set_played signal provided");
     // set_setlist.update(move |s| {
@@ -148,7 +149,18 @@ pub fn Songs() -> impl IntoView {
                         .unwrap_or(Ok(Song::default()))
                         .unwrap_or_default()
                 });
-                move || view! { <SongView song=song.get() pick_song set_song_played/> }.into_view()
+                move || {
+                    view! {
+                      <SongView
+                        song=song.get()
+                        pick_song
+                        set_song_played
+                        get_selected_song
+                        set_selected_song
+                      />
+                    }
+                        .into_view()
+                }
             }
           />
 
@@ -185,7 +197,18 @@ pub fn Songs() -> impl IntoView {
                         .unwrap_or(Ok(Song::default()))
                         .unwrap_or_default()
                 });
-                move || view! { <SongView song=song.get() pick_song set_song_played/> }.into_view()
+                move || {
+                    view! {
+                      <SongView
+                        song=song.get()
+                        pick_song
+                        set_song_played
+                        get_selected_song
+                        set_selected_song
+                      />
+                    }
+                        .into_view()
+                }
             }
           />
 
@@ -199,58 +222,90 @@ pub fn SongView(
     song: Song,
     pick_song: Action<HandPickSong, Result<()>>,
     set_song_played: Action<SetSongPlayed, Result<()>>,
+    get_selected_song: ReadSignal<Option<i32>>,
+    set_selected_song: WriteSignal<Option<i32>>,
 ) -> impl IntoView {
     let set_song_id = use_context::<WriteSignal<Option<i32>>>()
         .expect("Expected to have a set_played signal provided");
 
-    let set_played_class = match song.should_play {
-        true => "border-0 rounded-md px-3 py-2 shadow-md bg-ctp-flamingo text-ctp-mantle",
-        false => "border-0 rounded-l-md mr-0.5 px-3 py-2 shadow-md bg-ctp-flamingo text-ctp-mantle",
-    };
-
     view! {
-      <div class="ml-2 flex">
-        <div class="flex-1">
-          <SongItem song=song.clone()/>
-        </div>
-        <div class="flex items-center mr-2">
+      <div class="bg-ctp-crust py-2 rounded-lg border-0 shadow-md">
+        <div class="ml-2 flex">
           <button
-            type="button"
-            class="border-0 rounded-full px-3 py-2 shadow-lg bg-ctp-green text-ctp-mantle"
             on:click=move |_| {
-                set_song_id.update(|id| *id = Some(song.id));
+                set_selected_song
+                    .update(|id| *id = if *id == Some(song.id) { None } else { Some(song.id) });
             }
+
+            class="flex-1"
           >
 
-            <i class="fa fa-play"></i>
+            <SongItem song=song.clone()/>
           </button>
-        </div>
-        <div class="flex justify-end mr-2 items-center">
-          <button
-            type="button"
-            class=move || set_played_class
-            on:click=move |_| { set_song_played.dispatch(SetSongPlayed { song_id: song.id }) }
-          >
-
-            <i class="fa-solid fa-calendar-day"></i>
-          </button>
-
-          <Show when=move || !song.should_play>
+          <div class="flex items-center mr-2">
             <button
               type="button"
-              class="border-0 rounded-r-md px-3 py-2 shadow-md bg-ctp-flamingo text-ctp-mantle"
+              class="border-0 rounded-lg py-3 w-16 shadow-lg bg-ctp-green text-ctp-mantle"
               on:click=move |_| {
-                  if song.should_play {
-                      return;
-                  }
-                  pick_song.dispatch(HandPickSong { song_id: song.id })
+                  set_song_id.update(|id| *id = Some(song.id));
               }
             >
 
-              <i class="fa-solid fa-bookmark"></i>
+              <i class="fa fa-play"></i>
             </button>
-          </Show>
+          </div>
         </div>
+        <Show when=move || get_selected_song.get() == Some(song.id)>
+          <div class="ml-2 flex">
+            <div class="flex-1 items-center mr-2 mt-1 mb-1">
+              <a href=format!("/lyric/{}", song.id)>
+                <button
+                  type="button"
+                  class="border-0 rounded-md px-3 py-2 shadow-lg bg-ctp-lavender text-ctp-mantle"
+                >
+                  <i class="fa-solid fa-align-left"></i>
+                  Lyrics
+                </button>
+              </a>
+              <button
+                type="button"
+                class="border-0 rounded-md ml-2 px-3 py-2 shadow-md bg-ctp-flamingo text-ctp-mantle"
+                on:click=move |_| { set_song_played.dispatch(SetSongPlayed { song_id: song.id }) }
+              >
+
+                <i class="fa-solid fa-music"></i>
+              </button>
+
+              <Show when=move || !song.should_play>
+                <button
+                  type="button"
+                  class="border-0 rounded-md ml-2 px-3 py-2 shadow-md bg-ctp-lavender text-ctp-mantle"
+                  on:click=move |_| {
+                      if song.should_play {
+                          return;
+                      }
+                      pick_song.dispatch(HandPickSong { song_id: song.id })
+                  }
+                >
+
+                  <i class="fa-solid fa-square-check"></i>
+                </button>
+              </Show>
+            </div>
+            <div class="flex justify-end mr-2 items-center">
+        <div class="bg-ctp-flamingo rounded-full p-1 shadow-sm text-ctp-mantle">
+              <div class="text-xs text-bold">
+                {match song.last_played_at {
+                    Some(d) => d.format("%d-%m-%Y").to_string(),
+                    None => "Nooit".to_string(),
+                }}
+
+              </div>
+        </div>
+            </div>
+          </div>
+        </Show>
+
       </div>
     }
 }
