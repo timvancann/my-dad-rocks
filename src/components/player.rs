@@ -118,6 +118,20 @@ fn AudioPlayer(id: i32, source: Option<String>) -> impl IntoView {
 
               // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
 
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
+              // on:ended=move |_| {set_song_id.update(|id| *id = Some(next_id))}
+
               <div class="rounded-lg shadow-lg px-2 py-1">"No audio file available"</div>
             }
                 .into_view()

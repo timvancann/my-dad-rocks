@@ -1,6 +1,12 @@
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, Hash, Default)]
+pub struct Rehearsal {
+    pub unselected_songs: Vec<Song>,
+    pub selected_songs: Vec<Song>,
+}
+
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, Hash)]
 pub struct Song {
     pub id: i32,
@@ -81,6 +87,25 @@ impl Song {
         })
         .fetch_all(crate::database::get_db())
         .await
+    }
+
+    #[cfg(feature = "ssr")]
+    pub async fn get_rehearsal() -> Result<Rehearsal> {
+        Self::get_all().await.map(|songs| {
+            let mut selected = Vec::default();
+            let mut unselected = Vec::default();
+            for song in songs {
+                if song.should_play {
+                    selected.push(song);
+                } else {
+                    unselected.push(song);
+                }
+            }
+            Rehearsal {
+                selected_songs: selected,
+                unselected_songs: unselected,
+            }
+        })
     }
 
     #[cfg(feature = "ssr")]

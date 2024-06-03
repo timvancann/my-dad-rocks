@@ -1,9 +1,11 @@
 use leptos::*;
+use leptos_router::ActionForm;
+use leptos::logging::log;
 
 use crate::components::shared::Horizontal;
 use crate::components::song_item::SongItem;
 use crate::models::setlist::Setlist;
-use crate::models::song::Song;
+use crate::models::song::{Rehearsal, Song};
 
 type Result<T> = std::result::Result<T, ServerFnError>;
 
@@ -37,21 +39,20 @@ pub async fn fill_setlist(max_n: i32) -> Result<()> {
 }
 
 #[server(GetSongs, "/api", "GetJson")]
-pub async fn get_songs() -> Result<Vec<Song>> {
-    match Song::get_all().await {
+pub async fn get_songs() -> Result<Rehearsal> {
+    match Song::get_rehearsal().await {
         Ok(s) => Ok(s),
         Err(e) => Err(ServerFnError::from(e)),
     }
 }
 
-#[server(CleanSetlist, "/api", "GetJson")]
+#[server(CleanSetlist)]
 pub async fn clean_setlist() -> Result<()> {
     Setlist::clean().await.map_err(ServerFnError::from)
 }
 
 #[server(SetSongPlayed)]
 pub async fn set_song_played(song_id: i32) -> Result<()> {
-    logging::log!("Update song played");
     match Song::set_played(song_id).await {
         Ok(_) => Ok(()),
         Err(e) => Err(ServerFnError::from(e)),
@@ -72,56 +73,26 @@ pub fn Songs() -> impl IntoView {
 
     let set_song_played = create_server_action::<SetSongPlayed>();
     let pick_song = create_server_action::<HandPickSong>();
+    let (get_selected_song, set_selected_song) = create_signal::<Option<i32>>(None);
 
-    let songs_resource = create_resource(
-        move || {
+    let rehearsal = create_resource(
+        move || 
             (
                 set_song_played.version().get(),
                 pick_song.version().get(),
                 empty_setlist.version().get(),
                 fill.version().get(),
             )
-        },
+        ,
         |_| get_songs(),
     );
-    let (get_selected_song, set_selected_song) = create_signal::<Option<i32>>(None);
-    // let set_setlist = use_context::<WriteSignal<Vec<i32>>>()
-    //     .expect("Expected to have a set_played signal provided");
-    // set_setlist.update(move |s| {
-    //     *s = songs_resource
-    //         .get()
-    //         .unwrap_or_else(|| Ok(vec![]))
-    //         .unwrap_or_default()
-    //         .into_iter()
-    //         .filter(|s| s.should_play)
-    //         .map(|s| s.id)
-    //         .collect()
-    // });
 
     view! {
       <div class="flex justify-between m-3 items-center">
         <div class="font-bold text-xl flex">Setlist</div>
         <div class="flex">
-
-          <button
-            type="submit"
-            class="border-0 border-md rounded-l-lg mr-1 px-2 py-1 shadow-md bg-ctp-teal text-ctp-mantle"
-            on:click=move |_| { fill.dispatch(FillSetlist { max_n: 4 }) }
-          >
-            <i class="fa-solid fa-rotate-right"></i>
-            Vullen
-          </button>
-
-          <button
-
-            type="button"
-            class="border-0 border-md rounded-r-lg px-2 py-1 shadow-md bg-ctp-teal text-ctp-mantle"
-            on:click=move |_| { empty_setlist.dispatch(CleanSetlist {}) }
-          >
-            <i class="fa-solid fa-trash"></i>
-            Legen
-          </button>
-
+          <FillButton fill_action=fill/>
+          <CleanButton clean_action=empty_setlist/>
         </div>
       </div>
       <div class="grid grid-flow-row auto-rows-max gap-2">
@@ -130,39 +101,26 @@ pub fn Songs() -> impl IntoView {
         }>
 
           <For
-            {move || songs_resource.track()}
             each=move || {
-                songs_resource
+                rehearsal
                     .get()
-                    .unwrap_or_else(|| Ok(vec![]))
+                    .unwrap_or_else(|| Ok(Rehearsal::default()))
                     .unwrap_or_default()
+                    .selected_songs
                     .into_iter()
-                    .enumerate()
-                    .filter(|(_, s)| s.should_play)
             }
 
-            key=|(_, state)| state.clone()
-            children=move |(index, _)| {
-                let song = create_memo(move |_| {
-                    songs_resource
-                        .and_then(|data| { data.get(index).unwrap().clone() })
-                        .unwrap_or(Ok(Song::default()))
-                        .unwrap_or_default()
-                });
-                move || {
-                    view! {
-                      <SongView
-                        song=song.get()
-                        pick_song
-                        set_song_played
-                        get_selected_song
-                        set_selected_song
-                      />
-                    }
-                        .into_view()
-                }
-            }
-          />
+            key=|state| state.clone()
+            let:song
+          >
+            <SongView
+              song
+              pick_song
+              set_song_played
+              get_selected_song
+              set_selected_song
+            />
+            </For>
 
         </Transition>
       </div>
@@ -178,42 +136,60 @@ pub fn Songs() -> impl IntoView {
         }>
 
           <For
-            {move || songs_resource.track()}
             each=move || {
-                songs_resource
+                rehearsal
                     .get()
-                    .unwrap_or_else(|| Ok(vec![]))
+                    .unwrap_or_else(|| Ok(Rehearsal::default()))
                     .unwrap_or_default()
+                    .unselected_songs
                     .into_iter()
-                    .enumerate()
-                    .filter(|(_, s)| !s.should_play)
             }
 
-            key=|(_, state)| state.clone()
-            children=move |(index, _)| {
-                let song = create_memo(move |_| {
-                    songs_resource
-                        .and_then(|data| { data.get(index).unwrap().clone() })
-                        .unwrap_or(Ok(Song::default()))
-                        .unwrap_or_default()
-                });
-                move || {
-                    view! {
-                      <SongView
-                        song=song.get()
-                        pick_song
-                        set_song_played
-                        get_selected_song
-                        set_selected_song
-                      />
-                    }
-                        .into_view()
-                }
-            }
-          />
-
+            key=|state| state.clone()
+            let:song
+          >
+            <SongView
+              song
+              pick_song
+              set_song_played
+              get_selected_song
+              set_selected_song
+            />
+          </For>
         </Transition>
       </div>
+    }
+}
+
+#[component]
+pub fn FillButton(fill_action: Action<FillSetlist, Result<()>>) -> impl IntoView {
+    view! {
+      <ActionForm action=fill_action>
+        <input type="number" hidden=true name="max_n" value=4/>
+
+        <button
+          type="submit"
+          class="border-0 border-md rounded-l-lg mr-1 px-2 py-1 shadow-md bg-ctp-teal text-ctp-mantle"
+        >
+          <i class="fa-solid fa-rotate-right"></i>
+          Vullen
+        </button>
+      </ActionForm>
+    }
+}
+
+#[component]
+pub fn CleanButton(clean_action: Action<CleanSetlist, Result<()>>) -> impl IntoView {
+    view! {
+      <ActionForm action=clean_action>
+        <button
+          type="submit"
+          class="border-0 border-md rounded-r-lg px-2 py-1 shadow-md bg-ctp-teal text-ctp-mantle"
+        >
+          <i class="fa-solid fa-trash"></i>
+          Legen
+        </button>
+      </ActionForm>
     }
 }
 
@@ -233,6 +209,7 @@ pub fn SongView(
         <div class="ml-2 flex">
           <button
             on:click=move |_| {
+                log!("Updating selected song to: {}", song.id);
                 set_selected_song
                     .update(|id| *id = if *id == Some(song.id) { None } else { Some(song.id) });
             }
@@ -267,41 +244,34 @@ pub fn SongView(
                   Lyrics
                 </button>
               </a>
+              <Show when=move || !song.should_play>
+                <ActionForm action=pick_song class="inline">
+                  <input type="number" hidden=true name="song_id" value=song.id/>
+                  <button
+                    type="submit"
+                    class="border-0 rounded-md ml-2 px-3 py-2 shadow-md bg-ctp-lavender text-ctp-mantle inline"
+                  >
+
+                    <i class="fa-solid fa-square-check"></i>
+                    Oefenen
+                  </button>
+                </ActionForm>
+              </Show>
+            </div>
+            <div class="flex justify-end mr-2 items-center">
               <button
                 type="button"
-                class="border-0 rounded-md ml-2 px-3 py-2 shadow-md bg-ctp-flamingo text-ctp-mantle"
+                class="border-0 rounded-md ml-2 px-3 py-2 shadow-md bg-ctp-flamingo text-ctp-mantle text-xs"
                 on:click=move |_| { set_song_played.dispatch(SetSongPlayed { song_id: song.id }) }
               >
 
                 <i class="fa-solid fa-music"></i>
-              </button>
-
-              <Show when=move || !song.should_play>
-                <button
-                  type="button"
-                  class="border-0 rounded-md ml-2 px-3 py-2 shadow-md bg-ctp-lavender text-ctp-mantle"
-                  on:click=move |_| {
-                      if song.should_play {
-                          return;
-                      }
-                      pick_song.dispatch(HandPickSong { song_id: song.id })
-                  }
-                >
-
-                  <i class="fa-solid fa-square-check"></i>
-                </button>
-              </Show>
-            </div>
-            <div class="flex justify-end mr-2 items-center">
-        <div class="bg-ctp-flamingo rounded-full p-1 shadow-sm text-ctp-mantle">
-              <div class="text-xs text-bold">
+                " "
                 {match song.last_played_at {
                     Some(d) => d.format("%d-%m-%Y").to_string(),
                     None => "Nooit".to_string(),
                 }}
-
-              </div>
-        </div>
+              </button>
             </div>
           </div>
         </Show>
@@ -309,3 +279,5 @@ pub fn SongView(
       </div>
     }
 }
+
+
