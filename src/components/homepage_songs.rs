@@ -1,8 +1,9 @@
 use leptos::*;
-use leptos_router::ActionForm;
 use leptos::logging::log;
+use leptos_router::ActionForm;
 
-use crate::components::shared::Horizontal;
+use crate::components::player::PlayerData;
+use crate::components::shared::{Horizontal, PlayButton};
 use crate::components::song_item::SongItem;
 use crate::models::setlist::Setlist;
 use crate::models::song::{Rehearsal, Song};
@@ -73,17 +74,18 @@ pub fn Songs() -> impl IntoView {
 
     let set_song_played = create_server_action::<SetSongPlayed>();
     let pick_song = create_server_action::<HandPickSong>();
+
     let (get_selected_song, set_selected_song) = create_signal::<Option<i32>>(None);
 
     let rehearsal = create_resource(
-        move || 
+        move || {
             (
                 set_song_played.version().get(),
                 pick_song.version().get(),
                 empty_setlist.version().get(),
                 fill.version().get(),
             )
-        ,
+        },
         |_| get_songs(),
     );
 
@@ -113,14 +115,8 @@ pub fn Songs() -> impl IntoView {
             key=|state| state.clone()
             let:song
           >
-            <SongView
-              song
-              pick_song
-              set_song_played
-              get_selected_song
-              set_selected_song
-            />
-            </For>
+            <SongView song pick_song set_song_played get_selected_song set_selected_song/>
+          </For>
 
         </Transition>
       </div>
@@ -148,13 +144,7 @@ pub fn Songs() -> impl IntoView {
             key=|state| state.clone()
             let:song
           >
-            <SongView
-              song
-              pick_song
-              set_song_played
-              get_selected_song
-              set_selected_song
-            />
+            <SongView song pick_song set_song_played get_selected_song set_selected_song/>
           </For>
         </Transition>
       </div>
@@ -201,7 +191,8 @@ pub fn SongView(
     get_selected_song: ReadSignal<Option<i32>>,
     set_selected_song: WriteSignal<Option<i32>>,
 ) -> impl IntoView {
-    let set_song_id = use_context::<WriteSignal<Option<i32>>>()
+    let setlist_id: i32 = 1;
+    let set_player_data = use_context::<WriteSignal<Option<PlayerData>>>()
         .expect("Expected to have a set_played signal provided");
 
     view! {
@@ -209,7 +200,6 @@ pub fn SongView(
         <div class="ml-2 flex">
           <button
             on:click=move |_| {
-                log!("Updating selected song to: {}", song.id);
                 set_selected_song
                     .update(|id| *id = if *id == Some(song.id) { None } else { Some(song.id) });
             }
@@ -220,16 +210,7 @@ pub fn SongView(
             <SongItem song=song.clone()/>
           </button>
           <div class="flex items-center mr-2">
-            <button
-              type="button"
-              class="border-0 rounded-lg py-3 w-16 shadow-lg bg-ctp-green text-ctp-mantle"
-              on:click=move |_| {
-                  set_song_id.update(|id| *id = Some(song.id));
-              }
-            >
-
-              <i class="fa fa-play"></i>
-            </button>
+            <PlayButton song_id=song.id setlist_id/>
           </div>
         </div>
         <Show when=move || get_selected_song.get() == Some(song.id)>
@@ -271,6 +252,7 @@ pub fn SongView(
                     Some(d) => d.format("%d-%m-%Y").to_string(),
                     None => "Nooit".to_string(),
                 }}
+
               </button>
             </div>
           </div>
@@ -279,5 +261,3 @@ pub fn SongView(
       </div>
     }
 }
-
-

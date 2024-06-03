@@ -1,11 +1,11 @@
 use leptos::*;
 
 use crate::components::homepage_songs::Songs;
-use crate::components::player::Player;
+use crate::components::player::{Player, PlayerData};
 
 #[component]
 pub fn HomePage() -> impl IntoView {
-    let (get_song_id, set_song_id) = create_signal(None::<i32>);
+    let (get_song_id, set_song_id) = create_signal(None::<PlayerData>);
     provide_context(get_song_id);
     provide_context(set_song_id);
 

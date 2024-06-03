@@ -47,7 +47,7 @@ impl Default for Gig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize, Copy)]
 pub enum MoveKind {
     Up,
     Down,
