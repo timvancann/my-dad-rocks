@@ -4,6 +4,7 @@ use leptos_router::*;
 
 use crate::components::{gig::Gig, home::HomePage};
 use crate::components::gigs::Gigs;
+use crate::components::promo::Promo;
 use crate::components::song_text::SongText;
 use crate::error_template::{AppError, ErrorTemplate};
 
@@ -31,17 +32,23 @@ pub fn App() -> impl IntoView {
               <div class="flex flex-1 items-center justify-center items-stretch justify-start">
                 <div class="flex flex-1 items-center">
                   <a href="/" class="text-ctp-text rounded-md text-2xl font-bold">
-                    <img src="/android-chrome-192x192.png" width=60 height=60/>
+                    <img src="/promo/logo_transparent.png" width=60 height=60/>
                   </a>
                 </div>
-                <div class="ml-6 block items-center">
+                <div class="ml-6 block content-center">
                   <div class="flex space-x-4">
                     <a
                       href="/gigs"
                       class="bg-ctp-overlay2 text-ctp-mantle rounded-md px-3 py-2 text-md font-medium"
                     >
-                      Gigs
+                      <i class="fa-solid fa-ticket"></i> Gigs
                     </a>
+                    <a
+                      href="/promo"
+                      class="bg-ctp-overlay2 text-ctp-mantle rounded-md px-3 py-2 text-md font-medium"
+                    >
+                    <i class="fa-solid fa-rectangle-ad"></i> Promo
+      </a>
                   </div>
                 </div>
               </div>
@@ -53,6 +60,7 @@ pub fn App() -> impl IntoView {
               <Routes>
                 <Route path="/" view=HomePage/>
                 <Route path="/gigs" view=Gigs/>
+                <Route path="/promo" view=Promo/>
                 <Route path="/gig/:id" view=Gig/>
                 <Route path="/lyric/:id" view=SongText/>
               </Routes>

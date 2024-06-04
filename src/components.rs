@@ -3,6 +3,7 @@ pub mod gigs;
 pub mod home;
 pub mod homepage_songs;
 pub mod player;
+pub mod promo;
 pub mod random_selection;
 pub mod shared;
 pub mod song_item;
