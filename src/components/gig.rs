@@ -328,10 +328,9 @@ pub fn SelectedGigSong(
                   </button>
                 </div>
                 <Show when=move || get_selected_song.get() == Some(break_id)>
-                   <div class="ml-2 flex mt-2">
-                      <div class="flex items-center flex-1">
-                      </div>
-                      <div class="flex items-center mr-2">
+                  <div class="ml-2 flex mt-2">
+                    <div class="flex items-center flex-1"></div>
+                    <div class="flex items-center mr-2">
                       <RemoveSongButton song_id=break_id gig_id remove_song/>
                       <MoveSongInSet song_id=break_id gig_id move_song direction=MoveKind::Up/>
                       <MoveSongInSet song_id=break_id gig_id move_song direction=MoveKind::Down/>
@@ -363,7 +362,8 @@ pub fn SelectedGigSong(
                       <SongItem song=song.clone()/>
                     </button>
                     <div class="flex items-center mr-2">
-                      <PlayButton song_id=song.id setlist_id=gig_id/>
+                      // todo tvc: fix setlist_id / gig_id confusion
+                      <PlayButton song_id=song.id setlist_id=1/>
                     </div>
                   </div>
                   <Show when=move || get_selected_song.get() == Some(song.id)>
