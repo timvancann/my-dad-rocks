@@ -6,7 +6,7 @@ use crate::{
     models::gig::{Gig, MoveKind, SongKind},
 };
 use crate::components::player::{Player, PlayerData};
-use crate::components::shared::{Horizontal, PlayButton};
+use crate::components::shared::{Horizontal, LyricsButton, PlayButton};
 use crate::models;
 use crate::models::song::Song;
 
@@ -314,28 +314,30 @@ pub fn SelectedGigSong(
           SongKind::Break(break_id) => {
               view! {
                 <div class="flex flow-row justify-between">
-                    <button
-                      on:click=move |_| {
-                          set_selected_song
-                              .update(|id| {
-                                  *id = if *id == Some(break_id) { None } else { Some(break_id) };
-                              });
-                      }
+                  <button
+                    on:click=move |_| {
+                        set_selected_song
+                            .update(|id| {
+                                *id = if *id == Some(break_id) { None } else { Some(break_id) };
+                            });
+                    }
 
-                      class="flex-1"
-                    >
-                  <div class="place-self-center font-bold text-sm ml-6 my-3">pauze</div>
+                    class="flex-1"
+                  >
+                    <div class="place-self-center font-bold text-sm ml-6 my-3">pauze</div>
                   </button>
-                  </div>
-                  <Show when=move || get_selected_song.get() == Some(break_id)>
-                    <div class="ml-2 flex">
-                      <div class="flex-1 items-center mr-2 mt-1 mb-1">
-                        <RemoveSongButton song_id=break_id gig_id remove_song/>
-                        <MoveSongInSet song_id=break_id gig_id move_song direction=MoveKind::Up/>
-                        <MoveSongInSet song_id=break_id gig_id move_song direction=MoveKind::Down/>
+                </div>
+                <Show when=move || get_selected_song.get() == Some(break_id)>
+                   <div class="ml-2 flex mt-2">
+                      <div class="flex items-center flex-1">
                       </div>
+                      <div class="flex items-center mr-2">
+                      <RemoveSongButton song_id=break_id gig_id remove_song/>
+                      <MoveSongInSet song_id=break_id gig_id move_song direction=MoveKind::Up/>
+                      <MoveSongInSet song_id=break_id gig_id move_song direction=MoveKind::Down/>
                     </div>
-                  </Show>
+                  </div>
+                </Show>
               }
                   .into_view()
           }
@@ -365,8 +367,11 @@ pub fn SelectedGigSong(
                     </div>
                   </div>
                   <Show when=move || get_selected_song.get() == Some(song.id)>
-                    <div class="ml-2 flex-row">
-                      <div class="flex items-center mr-2 mt-1 mb-1">
+                    <div class="ml-2 flex mt-2">
+                      <div class="flex items-center flex-1">
+                        <LyricsButton song_id=song.id/>
+                      </div>
+                      <div class="flex items-center mr-2">
                         <RemoveSongButton song_id=song.id gig_id remove_song/>
                         <MoveSongInSet song_id=song.id gig_id move_song direction=MoveKind::Up/>
                         <MoveSongInSet song_id=song.id gig_id move_song direction=MoveKind::Down/>

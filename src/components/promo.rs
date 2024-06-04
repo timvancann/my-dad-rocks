@@ -15,9 +15,9 @@ pub fn Promo() -> impl IntoView {
 #[component]
 pub fn PromoImage(source: &'static str, title: &'static str) -> impl IntoView {
     view! {
-        <div class="grid grid-cols-1 justify-items-center mt-2">
-            <img src=source class="size-60"/>
-            <div class="text">{title}</div>
-        </div>
+      <div class="grid grid-cols-1 justify-items-center mt-2">
+        <img src=source class="size-60"/>
+        <div class="text">{title}</div>
+      </div>
     }
 }

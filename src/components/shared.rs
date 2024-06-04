@@ -37,3 +37,18 @@ pub fn PlayButton(song_id: i32, setlist_id: i32) -> impl IntoView {
       </button>
     }
 }
+
+#[component]
+pub fn LyricsButton(song_id: i32) -> impl IntoView {
+    view! {
+      <a href=format!("/lyric/{}", song_id)>
+        <button
+          type="button"
+          class="border-0 rounded-md px-3 py-2 shadow-lg bg-ctp-lavender text-ctp-mantle"
+        >
+          <i class="fa-solid fa-align-left"></i>
+          Lyrics
+        </button>
+      </a>
+    }
+}

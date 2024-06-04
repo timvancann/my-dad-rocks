@@ -3,7 +3,7 @@ use leptos::logging::log;
 use leptos_router::ActionForm;
 
 use crate::components::player::PlayerData;
-use crate::components::shared::{Horizontal, PlayButton};
+use crate::components::shared::{Horizontal, LyricsButton, PlayButton};
 use crate::components::song_item::SongItem;
 use crate::models::setlist::Setlist;
 use crate::models::song::{Rehearsal, Song};
@@ -216,15 +216,7 @@ pub fn SongView(
         <Show when=move || get_selected_song.get() == Some(song.id)>
           <div class="ml-2 flex">
             <div class="flex-1 items-center mr-2 mt-1 mb-1">
-              <a href=format!("/lyric/{}", song.id)>
-                <button
-                  type="button"
-                  class="border-0 rounded-md px-3 py-2 shadow-lg bg-ctp-lavender text-ctp-mantle"
-                >
-                  <i class="fa-solid fa-align-left"></i>
-                  Lyrics
-                </button>
-              </a>
+              <LyricsButton song_id=song.id/>
               <Show when=move || !song.should_play>
                 <ActionForm action=pick_song class="inline">
                   <input type="number" hidden=true name="song_id" value=song.id/>

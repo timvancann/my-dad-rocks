@@ -41,14 +41,16 @@ pub fn App() -> impl IntoView {
                       href="/gigs"
                       class="bg-ctp-overlay2 text-ctp-mantle rounded-md px-3 py-2 text-md font-medium"
                     >
-                      <i class="fa-solid fa-ticket"></i> Gigs
+                      <i class="fa-solid fa-ticket"></i>
+                      Gigs
                     </a>
                     <a
                       href="/promo"
                       class="bg-ctp-overlay2 text-ctp-mantle rounded-md px-3 py-2 text-md font-medium"
                     >
-                    <i class="fa-solid fa-rectangle-ad"></i> Promo
-      </a>
+                      <i class="fa-solid fa-rectangle-ad"></i>
+                      Promo
+                    </a>
                   </div>
                 </div>
               </div>
