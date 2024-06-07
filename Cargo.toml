@@ -11,6 +11,7 @@ axum = { version = "0.7.4", optional = true }
 base64 = "0.22.0"
 cfg-if = "1"
 chrono = { version = "0.4.34", features = ["serde"] }
+clap = { version = "4.5.4", features = ["derive"] }
 console_error_panic_hook = "0.1"
 console_log = "1"
 dotenv = { "version" = "0.15.0", optional = true }
@@ -23,9 +24,10 @@ leptos_axum = { version = "0.6.9", optional = true }
 leptos_meta = { version = "0.6.9" }
 leptos_router = { version = "0.6.9" }
 log = "0.4"
+musicbrainz_rs = { version = "0.5.0", optional = true }
 once_cell = { version = "1.19.0", optional = true }
 rand = { version = "0.8.5", optional = true }
-rodio = { version = "0.17.1", features = ["symphonia-aac", "symphonia-isomp4"], optional = true }
+reqwest = { version = "0.12.4" }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.114"
 simple_logger = "4"
@@ -57,11 +59,11 @@ ssr = [
     "dep:leptos_axum",
     "dep:once_cell",
     "dep:rand",
-    "dep:rodio",
     "dep:sqlx",
     "dep:tokio",
     "dep:tokio-util",
     "dep:tower",
+    "dep:musicbrainz_rs",
     "dep:tower-http",
     "dep:tracing",
     "dep:url",

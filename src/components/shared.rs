@@ -8,10 +8,10 @@ pub fn Horizontal() -> impl IntoView {
 }
 
 #[component]
-pub fn AlbumArt(title: String, width: u32, height: u32) -> impl IntoView {
-    let mut art = title;
-    art.push_str(".png");
-    let path = format!("/album_art/{}", art);
+pub fn AlbumArt(mid: String, width: u32, height: u32) -> impl IntoView {
+    let mut art = mid;
+    art.push_str(".jpeg");
+    let path = format!("/coverart/{}", art);
 
     view! { <img src=path width=width height=height/> }
 }

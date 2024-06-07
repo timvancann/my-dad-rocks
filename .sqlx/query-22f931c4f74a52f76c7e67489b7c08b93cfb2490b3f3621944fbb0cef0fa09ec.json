@@ -25,22 +25,27 @@
       },
       {
         "ordinal": 4,
-        "name": "sanitized_title",
-        "type_info": "Varchar"
-      },
-      {
-        "ordinal": 5,
         "name": "created_at",
         "type_info": "Timestamp"
       },
       {
-        "ordinal": 6,
+        "ordinal": 5,
         "name": "lyrics",
         "type_info": "Text"
       },
       {
-        "ordinal": 7,
+        "ordinal": 6,
         "name": "gs_url",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "release_mid",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "artist_mid",
         "type_info": "Varchar"
       }
     ],
@@ -54,7 +59,8 @@
       true,
       false,
       false,
-      false,
+      true,
+      true,
       true
     ]
   },

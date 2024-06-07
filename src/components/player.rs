@@ -79,7 +79,7 @@ fn SelectedSongView(song: Song) -> impl IntoView {
     view! {
       <div class="flex grow">
         <figure class="flex w-20 h-20 mr-4">
-          <AlbumArt title=song.sanitized_title.clone() width=80 height=80/>
+          <AlbumArt mid=song.release_mid.unwrap() width=80 height=80/>
         </figure>
         <div class="flex-1 flex-cols">
           <div class="text-lg font-bold">{song.title}</div>
