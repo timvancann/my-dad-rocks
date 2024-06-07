@@ -35,5 +35,5 @@ EXPOSE 8080
 
 # -- NB: update binary name from "leptos_start" to match your app name in Cargo.toml --
 # Run the server
-CMD ["/app/my-dad-rocks"]
+CMD ["/app/my-dad-rocks", "api"]
 
