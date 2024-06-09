@@ -1,12 +1,17 @@
 # My Dad Rocks
 
-![Rust Badge](https://img.shields.io/badge/Rust-000?logo=rust&logoColor=fff&style=flat-square)
-![Leptos Badge](https://img.shields.io/badge/Leptos-EF3939?logo=leptos&logoColor=fff&style=flat-square)
-![Docker Badge](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=fff&style=flat-square)
-![MusicBrainz Badge](https://img.shields.io/badge/MusicBrainz-BA478F?logo=musicbrainz&logoColor=fff&style=flat-square)
-
 ![Uptime Robot status](https://img.shields.io/uptimerobot/status/m797024372-4824c8c575c02becefa8029f)
 ![Fly Deploy Status](https://github.com/timvancann/my-dad-rocks/actions/workflows/fly.yml/badge.svg)
+
+---
+
+![Rust Badge](https://img.shields.io/badge/Rust-000?logo=rust&logoColor=fff&style=flat-square)
+![Leptos Badge](https://img.shields.io/badge/Leptos-EF3939?logo=leptos&logoColor=fff&style=flat-square)
+![Tailwind CSS Badge](https://img.shields.io/badge/Tailwind%20CSS-06B6D4?logo=tailwindcss&logoColor=fff&style=flat-square)
+![Docker Badge](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=fff&style=flat-square)
+
+![MusicBrainz Badge](https://img.shields.io/badge/MusicBrainz-BA478F?logo=musicbrainz&logoColor=fff&style=flat-square)
+![PostgreSQL Badge](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=fff&style=flat-square)
 
 ## Install dev dependencies
 

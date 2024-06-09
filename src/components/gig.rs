@@ -3,11 +3,10 @@ use leptos_router::*;
 
 use crate::{
     components::song_item::SongItem,
-    models::gig::{Gig, MoveKind, SongKind},
+    models::gig::{Gig, GigSong, MoveKind},
 };
 use crate::components::player::{Player, PlayerData};
 use crate::components::shared::{Horizontal, LyricsButton, PlayButton};
-use crate::models;
 use crate::models::song::Song;
 
 #[server(GetGig, "/api", "GetJson")]
@@ -146,7 +145,21 @@ pub fn Gig() -> impl IntoView {
             key=|state| state.clone()
             let:song
           >
-            <SelectedGigSong selected_song=song gig_id=gig_id() remove_song move_song/>
+            <SelectedGigSong
+              selected_song=song
+              all_songs=gig_resource
+                  .get()
+                  .unwrap_or_else(|| Ok(Gig::default()))
+                  .unwrap_or_default()
+                  .songs
+                  .into_iter()
+                  .filter(|s| s.id > 0)
+                  .map(|s| s.song.unwrap())
+                  .collect()
+              gig_id=gig_id()
+              remove_song
+              move_song
+            />
           </For>
         </Transition>
       </div>
@@ -300,7 +313,8 @@ pub fn MoveSongInSet(
 
 #[component]
 pub fn SelectedGigSong(
-    selected_song: (usize, SongKind),
+    selected_song: GigSong,
+    all_songs: Vec<Song>,
     gig_id: i32,
     remove_song: Act<RemoveSongFromGig>,
     move_song: Act<MoveSongInGig>,
@@ -310,78 +324,76 @@ pub fn SelectedGigSong(
     let set_selected_song = use_context::<WriteSignal<Option<i32>>>()
         .expect("Expected to have a selected song signal provided");
     view! {
-      {match selected_song.1 {
-          SongKind::Break(break_id) => {
-              view! {
-                <div class="flex flow-row justify-between">
-                  <button
-                    on:click=move |_| {
-                        set_selected_song
-                            .update(|id| {
-                                *id = if *id == Some(break_id) { None } else { Some(break_id) };
-                            });
-                    }
+      {if selected_song.id < 0 {
+          view! {
+            <div class="flex flow-row justify-between">
+              <button
+                on:click=move |_| {
+                    set_selected_song
+                        .update(|id| {
+                            *id = if *id == Some(selected_song.id) { None } else { Some(selected_song.id) };
+                        });
+                }
 
-                    class="flex-1"
-                  >
-                    <div class="place-self-center font-bold text-sm ml-6 my-3">pauze</div>
-                  </button>
+                class="flex-1"
+              >
+                <div class="place-self-center font-bold text-sm ml-6 my-3">pauze</div>
+              </button>
+            </div>
+            <Show when=move || get_selected_song.get() == Some(selected_song.id)>
+              <div class="ml-2 flex mt-2">
+                <div class="flex items-center flex-1"></div>
+                <div class="flex items-center mr-2">
+                  <RemoveSongButton song_id=selected_song.id gig_id remove_song/>
+                  <MoveSongInSet song_id=selected_song.id gig_id move_song direction=MoveKind::Up/>
+                  <MoveSongInSet song_id=selected_song.id gig_id move_song direction=MoveKind::Down/>
                 </div>
-                <Show when=move || get_selected_song.get() == Some(break_id)>
-                  <div class="ml-2 flex mt-2">
-                    <div class="flex items-center flex-1"></div>
-                    <div class="flex items-center mr-2">
-                      <RemoveSongButton song_id=break_id gig_id remove_song/>
-                      <MoveSongInSet song_id=break_id gig_id move_song direction=MoveKind::Up/>
-                      <MoveSongInSet song_id=break_id gig_id move_song direction=MoveKind::Down/>
-                    </div>
-                  </div>
-                </Show>
-              }
-                  .into_view()
+              </div>
+            </Show>
           }
-          SongKind::Song(song) => {
-              view! {
-                <div class="bg-ctp-crust py-2 rounded-lg border-0 shadow-md">
-                  <div class="ml-2 flex">
-                    <div class="flex">
-                      <div class="font-medium text-xs self-center mr-2 justify-self-end">
-                        {selected_song.0 + 1}
-                      </div>
-                    </div>
-                    <button
-                      on:click=move |_| {
-                          set_selected_song
-                              .update(|id| {
-                                  *id = if *id == Some(song.id) { None } else { Some(song.id) };
-                              });
-                      }
+              .into_view()
+      } else {
+          let song = selected_song.song.unwrap();
+          view! {
+            <div class="bg-ctp-crust py-2 rounded-lg border-0 shadow-md">
+              <div class="ml-2 flex">
+                <div class="flex">
+                  <div class="font-medium text-xs self-center mr-2 justify-self-end">
+                    {selected_song.index + 1}
+                  </div>
+                </div>
+                <button
+                  on:click=move |_| {
+                      set_selected_song
+                          .update(|id| {
+                              *id = if *id == Some(selected_song.id) { None } else { Some(selected_song.id) };
+                          });
+                  }
 
-                      class="flex-1"
-                    >
-                      <SongItem song=song.clone()/>
-                    </button>
-                    <div class="flex items-center mr-2">
-                      // todo tvc: fix setlist_id / gig_id confusion
-                      <PlayButton song_id=song.id setlist_id=1/>
-                    </div>
-                  </div>
-                  <Show when=move || get_selected_song.get() == Some(song.id)>
-                    <div class="ml-2 flex mt-2">
-                      <div class="flex items-center flex-1">
-                        <LyricsButton song_id=song.id/>
-                      </div>
-                      <div class="flex items-center mr-2">
-                        <RemoveSongButton song_id=song.id gig_id remove_song/>
-                        <MoveSongInSet song_id=song.id gig_id move_song direction=MoveKind::Up/>
-                        <MoveSongInSet song_id=song.id gig_id move_song direction=MoveKind::Down/>
-                      </div>
-                    </div>
-                  </Show>
+                  class="flex-1"
+                >
+                  <SongItem song=song.clone()/>
+                </button>
+                <div class="flex items-center mr-2">
+                  // todo tvc: fix setlist_id / gig_id confusion
+                  <PlayButton song=song.clone() all_songs/>
                 </div>
-              }
-                  .into_view()
+              </div>
+              <Show when=move || get_selected_song.get() == Some(song.id)>
+                <div class="ml-2 flex mt-2">
+                  <div class="flex items-center flex-1">
+                    <LyricsButton song_id=song.id/>
+                  </div>
+                  <div class="flex items-center mr-2">
+                    <RemoveSongButton song_id=song.id gig_id remove_song/>
+                    <MoveSongInSet song_id=song.id gig_id move_song direction=MoveKind::Up/>
+                    <MoveSongInSet song_id=song.id gig_id move_song direction=MoveKind::Down/>
+                  </div>
+                </div>
+              </Show>
+            </div>
           }
+              .into_view()
       }}
     }
 }

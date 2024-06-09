@@ -1,6 +1,7 @@
 use leptos::*;
 
 use crate::components::player::PlayerData;
+use crate::models::song::Song;
 
 #[component]
 pub fn Horizontal() -> impl IntoView {
@@ -17,7 +18,7 @@ pub fn AlbumArt(mid: String, width: u32, height: u32) -> impl IntoView {
 }
 
 #[component]
-pub fn PlayButton(song_id: i32, setlist_id: i32) -> impl IntoView {
+pub fn PlayButton(song: Song, all_songs: Vec<Song>) -> impl IntoView {
     let set_player_data = use_context::<WriteSignal<Option<PlayerData>>>()
         .expect("Expected to have a set_played signal provided");
 
@@ -28,8 +29,11 @@ pub fn PlayButton(song_id: i32, setlist_id: i32) -> impl IntoView {
         on:click=move |_| {
             set_player_data
                 .update(|data| {
-                    *data = Some(PlayerData { song_id, setlist_id });
-                });
+                    *data = Some(PlayerData {
+                        song: song.clone(),
+                        all_songs: all_songs.clone(),
+                    })
+                })
         }
       >
 

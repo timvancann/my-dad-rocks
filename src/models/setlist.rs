@@ -10,17 +10,6 @@ pub struct Setlist {
 
 impl Setlist {
     #[cfg(feature = "ssr")]
-    pub async fn update_lock(locked: bool) -> Result<(), sqlx::Error> {
-        sqlx::query!(
-            "UPDATE setlists SET is_locked = $1 WHERE title = 'Oefenen'",
-            locked
-        )
-        .execute(crate::database::get_db())
-        .await
-        .map(|_| ())
-    }
-
-    #[cfg(feature = "ssr")]
     pub async fn get_by_id(id: i32) -> Result<Self, sqlx::Error> {
         sqlx::query_as!(Setlist, "SELECT * FROM setlists WHERE id = $1", id)
             .fetch_one(crate::database::get_db())

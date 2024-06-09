@@ -1,8 +1,6 @@
 use leptos::*;
-use leptos::logging::log;
 use leptos_router::ActionForm;
 
-use crate::components::player::PlayerData;
 use crate::components::shared::{Horizontal, LyricsButton, PlayButton};
 use crate::components::song_item::SongItem;
 use crate::models::setlist::Setlist;
@@ -115,7 +113,19 @@ pub fn Songs() -> impl IntoView {
             key=|state| state.clone()
             let:song
           >
-            <SongView song pick_song set_song_played get_selected_song set_selected_song/>
+            <SongView
+              song
+              all_songs=rehearsal
+                  .get()
+                  .unwrap_or_else(|| Ok(Rehearsal::default()))
+                  .unwrap_or_default()
+                  .selected_songs
+              pick_song
+              in_rehearsal=true
+              set_song_played
+              get_selected_song
+              set_selected_song
+            />
           </For>
 
         </Transition>
@@ -144,7 +154,19 @@ pub fn Songs() -> impl IntoView {
             key=|state| state.clone()
             let:song
           >
-            <SongView song pick_song set_song_played get_selected_song set_selected_song/>
+            <SongView
+              song
+              all_songs=rehearsal
+                  .get()
+                  .unwrap_or_else(|| Ok(Rehearsal::default()))
+                  .unwrap_or_default()
+                  .unselected_songs
+              pick_song
+              in_rehearsal=false
+              set_song_played
+              get_selected_song
+              set_selected_song
+            />
           </For>
         </Transition>
       </div>
@@ -186,15 +208,13 @@ pub fn CleanButton(clean_action: Action<CleanSetlist, Result<()>>) -> impl IntoV
 #[component]
 pub fn SongView(
     song: Song,
+    all_songs: Vec<Song>,
     pick_song: Action<HandPickSong, Result<()>>,
+    in_rehearsal: bool,
     set_song_played: Action<SetSongPlayed, Result<()>>,
     get_selected_song: ReadSignal<Option<i32>>,
     set_selected_song: WriteSignal<Option<i32>>,
 ) -> impl IntoView {
-    let setlist_id: i32 = 1;
-    let set_player_data = use_context::<WriteSignal<Option<PlayerData>>>()
-        .expect("Expected to have a set_played signal provided");
-
     view! {
       <div class="bg-ctp-crust py-2 rounded-lg border-0 shadow-md">
         <div class="ml-2 flex">
@@ -210,14 +230,14 @@ pub fn SongView(
             <SongItem song=song.clone()/>
           </button>
           <div class="flex items-center mr-2">
-            <PlayButton song_id=song.id setlist_id/>
+            <PlayButton song=song.clone() all_songs/>
           </div>
         </div>
         <Show when=move || get_selected_song.get() == Some(song.id)>
           <div class="ml-2 flex">
             <div class="flex-1 items-center mr-2 mt-1 mb-1">
               <LyricsButton song_id=song.id/>
-              <Show when=move || !song.should_play>
+              <Show when=move || in_rehearsal>
                 <ActionForm action=pick_song class="inline">
                   <input type="number" hidden=true name="song_id" value=song.id/>
                   <button

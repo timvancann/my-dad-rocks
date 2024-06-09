@@ -30,7 +30,7 @@ pub struct Gig {
     pub venue: String,
     pub date: NaiveDate,
     pub time: Option<String>,
-    pub songs: Vec<(usize, SongKind)>,
+    pub songs: Vec<GigSong>,
     pub unselected_songs: Vec<Song>,
 }
 
@@ -53,34 +53,42 @@ pub enum MoveKind {
     Down,
 }
 
+#[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
+pub struct GigSong {
+    pub index: usize,
+    pub id: i32,
+    pub song: Option<Song>,
+}
+
 impl Gig {
     #[cfg(feature = "ssr")]
     pub async fn get_by_id(id: i32) -> Result<Self, sqlx::Error> {
-        let songs = Song::get_all().await?;
+        let all_songs = Song::get_all().await?;
         let gig = sqlx::query_as!(GigModel, "SELECT * FROM gigs WHERE id = $1", id)
             .fetch_one(crate::database::get_db())
             .await?;
 
-        let songs_in_gig: Vec<SongKind> = gig
-            .songs
-            .iter()
-            .map(|s| {
-                if s < &0 {
-                    SongKind::Break(*s)
-                } else {
-                    SongKind::Song(songs.iter().find(|song| song.id == *s).unwrap().clone())
-                }
-            })
-            .collect();
-
-        let mut songs_indexed: Vec<(usize, SongKind)> = Vec::default();
+        let mut songs_indexed: Vec<GigSong> = Vec::default();
         let mut break_count = 0usize;
-        for song in songs_in_gig.iter().enumerate() {
-            if let SongKind::Break(_) = song.1 {
+        for (index, song_id) in gig.songs.iter().enumerate() {
+            if song_id < &0 {
                 break_count += 1;
-                songs_indexed.push((0, song.1.clone()));
+                songs_indexed.push(GigSong {
+                    index: index - break_count,
+                    id: *song_id,
+                    song: None,
+                });
             } else {
-                songs_indexed.push((song.0 - break_count, song.1.clone()));
+                let song = all_songs
+                    .iter()
+                    .find(|song| song.id == *song_id)
+                    .unwrap()
+                    .clone();
+                songs_indexed.push(GigSong {
+                    index: index - break_count,
+                    id: *song_id,
+                    song: Some(song),
+                });
             }
         }
 
@@ -90,7 +98,7 @@ impl Gig {
             time: gig.time,
             date: gig.date,
             songs: songs_indexed,
-            unselected_songs: songs
+            unselected_songs: all_songs
                 .into_iter()
                 .filter(|s| !gig.songs.contains(&s.id))
                 .collect(),
