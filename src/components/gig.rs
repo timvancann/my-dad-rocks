@@ -331,7 +331,11 @@ pub fn SelectedGigSong(
                 on:click=move |_| {
                     set_selected_song
                         .update(|id| {
-                            *id = if *id == Some(selected_song.id) { None } else { Some(selected_song.id) };
+                            *id = if *id == Some(selected_song.id) {
+                                None
+                            } else {
+                                Some(selected_song.id)
+                            };
                         });
                 }
 
@@ -346,7 +350,12 @@ pub fn SelectedGigSong(
                 <div class="flex items-center mr-2">
                   <RemoveSongButton song_id=selected_song.id gig_id remove_song/>
                   <MoveSongInSet song_id=selected_song.id gig_id move_song direction=MoveKind::Up/>
-                  <MoveSongInSet song_id=selected_song.id gig_id move_song direction=MoveKind::Down/>
+                  <MoveSongInSet
+                    song_id=selected_song.id
+                    gig_id
+                    move_song
+                    direction=MoveKind::Down
+                  />
                 </div>
               </div>
             </Show>
@@ -366,7 +375,11 @@ pub fn SelectedGigSong(
                   on:click=move |_| {
                       set_selected_song
                           .update(|id| {
-                              *id = if *id == Some(selected_song.id) { None } else { Some(selected_song.id) };
+                              *id = if *id == Some(selected_song.id) {
+                                  None
+                              } else {
+                                  Some(selected_song.id)
+                              };
                           });
                   }
 
@@ -375,7 +388,6 @@ pub fn SelectedGigSong(
                   <SongItem song=song.clone()/>
                 </button>
                 <div class="flex items-center mr-2">
-                  // todo tvc: fix setlist_id / gig_id confusion
                   <PlayButton song=song.clone() all_songs/>
                 </div>
               </div>

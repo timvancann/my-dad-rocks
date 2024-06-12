@@ -48,11 +48,31 @@ pub fn LyricsButton(song_id: i32) -> impl IntoView {
       <a href=format!("/lyric/{}", song_id)>
         <button
           type="button"
-          class="border-0 rounded-md px-3 py-2 shadow-lg bg-ctp-lavender text-ctp-mantle"
+          class="border-0 rounded-md px-2 py-2 shadow-lg bg-ctp-lavender text-ctp-mantle"
         >
           <i class="fa-solid fa-align-left"></i>
           Lyrics
         </button>
       </a>
     }
+}
+
+#[component]
+pub fn EditButton(song_id: i32) -> impl IntoView {
+    view! {
+      <a href=format!("/song/{}", song_id)>
+        <button
+          type="button"
+          class="border-0 rounded-md px-2 ml-2 py-2 shadow-lg bg-ctp-lavender text-ctp-mantle"
+        >
+          <i class="fa-solid fa-gear"></i>
+          Edit
+        </button>
+      </a>
+    }
+}
+
+#[server(GetSong, "/api", "GetJson")]
+pub async fn get_song(id: usize) -> Result<Song, ServerFnError> {
+    Song::get(id as i32).await.map_err(ServerFnError::from)
 }

@@ -47,6 +47,11 @@
         "ordinal": 8,
         "name": "artist_mid",
         "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "bpm",
+        "type_info": "Int4"
       }
     ],
     "parameters": {
@@ -59,6 +64,7 @@
       true,
       false,
       false,
+      true,
       true,
       true,
       true

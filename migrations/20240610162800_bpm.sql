@@ -1,0 +1,1 @@
+ALTER TABLE songs ADD COLUMN bpm INTEGER default 0;

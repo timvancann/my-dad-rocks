@@ -1,13 +1,15 @@
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
+use crate::components::edit_song::EditSongData;
+
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, Hash, Default)]
 pub struct Rehearsal {
     pub unselected_songs: Vec<Song>,
     pub selected_songs: Vec<Song>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, Hash, Default)]
 pub struct Song {
     pub id: i32,
     pub artist: String,
@@ -15,25 +17,9 @@ pub struct Song {
     pub release_mid: Option<String>,
     pub artist_mid: Option<String>,
     pub last_played_at: Option<NaiveDate>,
-    pub sanitized_title: String,
+    pub bpm: Option<i32>,
     pub gs_url: Option<String>,
     pub lyrics: String,
-}
-
-impl Default for Song {
-    fn default() -> Self {
-        Song {
-            id: 0,
-            artist: "".to_string(),
-            title: "".to_string(),
-            last_played_at: None,
-            gs_url: None,
-            release_mid: None,
-            artist_mid: None,
-            sanitized_title: "".to_string(),
-            lyrics: "".to_string(),
-        }
-    }
 }
 
 #[cfg(feature = "ssr")]
@@ -58,7 +44,7 @@ impl Song {
             release_mid: row.release_mid,
             artist_mid: row.artist_mid,
             gs_url: row.gs_url,
-            sanitized_title: "".to_string(),
+            bpm: row.bpm,
             lyrics: row.lyrics,
         })
         .fetch_one(crate::database::get_db())
@@ -108,7 +94,7 @@ impl Song {
             last_played_at: row.last_played_at,
             release_mid: row.release_mid,
             artist_mid: row.artist_mid,
-            sanitized_title: "".to_string(),
+            bpm: row.bpm,
             lyrics: row.lyrics,
         })
         .fetch_all(crate::database::get_db())
@@ -127,15 +113,17 @@ impl Song {
     }
 
     #[cfg(feature = "ssr")]
-    pub async fn update_lyrics(id: i32, lyrics: String) -> Result<()> {
-        sqlx::query!("UPDATE songs SET lyrics = $1 WHERE id = $2", lyrics, id)
-            .execute(crate::database::get_db())
-            .await
-            .map(|_| ())
+    pub async fn update(data: EditSongData) -> Result<()> {
+        sqlx::query!(
+            "UPDATE songs SET artist=$2, title=$3, bpm=$4, lyrics = $5 WHERE id = $1",
+            data.id,
+            data.artist,
+            data.title,
+            data.bpm,
+            data.lyrics
+        )
+        .execute(crate::database::get_db())
+        .await
+        .map(|_| ())
     }
-}
-
-pub enum ThumbnailType {
-    Thumbnail,
-    Player,
 }

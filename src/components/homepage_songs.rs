@@ -1,7 +1,7 @@
 use leptos::*;
 use leptos_router::ActionForm;
 
-use crate::components::shared::{Horizontal, LyricsButton, PlayButton};
+use crate::components::shared::{EditButton, Horizontal, LyricsButton, PlayButton};
 use crate::components::song_item::SongItem;
 use crate::models::setlist::Setlist;
 use crate::models::song::{Rehearsal, Song};
@@ -237,7 +237,8 @@ pub fn SongView(
           <div class="ml-2 flex">
             <div class="flex-1 items-center mr-2 mt-1 mb-1">
               <LyricsButton song_id=song.id/>
-              <Show when=move || in_rehearsal>
+              <EditButton song_id=song.id/>
+              <Show when=move || !in_rehearsal>
                 <ActionForm action=pick_song class="inline">
                   <input type="number" hidden=true name="song_id" value=song.id/>
                   <button
@@ -245,8 +246,8 @@ pub fn SongView(
                     class="border-0 rounded-md ml-2 px-3 py-2 shadow-md bg-ctp-lavender text-ctp-mantle inline"
                   >
 
-                    <i class="fa-solid fa-square-check"></i>
-                    Oefenen
+                    <i class="fa-solid fa-arrow-up"></i>
+                    Oefen
                   </button>
                 </ActionForm>
               </Show>

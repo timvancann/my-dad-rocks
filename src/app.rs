@@ -3,6 +3,7 @@ use leptos_meta::*;
 use leptos_router::*;
 
 use crate::components::{gig::Gig, home::HomePage};
+use crate::components::edit_song::EditSongView;
 use crate::components::gigs::Gigs;
 use crate::components::promo::Promo;
 use crate::components::song_text::SongText;
@@ -65,6 +66,7 @@ pub fn App() -> impl IntoView {
                 <Route path="/promo" view=Promo/>
                 <Route path="/gig/:id" view=Gig/>
                 <Route path="/lyric/:id" view=SongText/>
+                <Route path="/song/:id" view=EditSongView/>
               </Routes>
             </main>
           </div>

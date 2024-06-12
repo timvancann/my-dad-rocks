@@ -75,18 +75,21 @@ fn AudioPlayer(player_data: PlayerData) -> impl IntoView {
 
     view! {
       <div class="flex mt-1">
-        <audio class="grow" controls autoplay preload="metadata"
-        on:ended=move |_| {
-            let new_data = Some(PlayerData {
-                      song: player_data.next_song(),
-                      all_songs: player_data.all_songs.clone(),
-                  });
-            set_player_data
-              .update(|data| {
-                  *data = new_data
-              })
-        }>
-        <source src=url/>
+        <audio
+          class="grow"
+          controls
+          autoplay
+          preload="metadata"
+          on:ended=move |_| {
+              let new_data = Some(PlayerData {
+                  song: player_data.next_song(),
+                  all_songs: player_data.all_songs.clone(),
+              });
+              set_player_data.update(|data| { *data = new_data })
+          }
+        >
+
+          <source src=url/>
         </audio>
       </div>
     }
