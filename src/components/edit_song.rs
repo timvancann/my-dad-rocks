@@ -72,8 +72,10 @@ pub fn EditSongForm(song: Song) -> impl IntoView {
           class="textarea textarea-bordered w-full max-w p-2 h-screen white-space:pre;"
           placeholder="Edit lyrics"
           name="song[lyrics]"
-          value={song.lyrics}
-        />
+          value={song.lyrics.to_string()}
+        >
+        {song.lyrics}
+        </textarea>
       </ActionForm>
     }
 }
